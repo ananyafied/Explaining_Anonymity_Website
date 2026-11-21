@@ -199,10 +199,14 @@ function attackSection(m) {
       hbars({ rows, series: [{ key: "SHAP", name: `SHAP (${LABEL[lvl].toLowerCase()})`, color: S1 }, { key: "LIME", name: `LIME (${LABEL[lvl].toLowerCase()})`, color: S2 }], truthName: "SHAP, no attack" }),
       tableView(["Feature", `SHAP (${LABEL[lvl]})`, `LIME (${LABEL[lvl]})`, "SHAP (None)"], rows.map((x) => [x.label, pct(x.values.SHAP, 1), pct(x.values.LIME, 1), pct(x.truth, 1)])));
 
-    const sl = lvl === "none" ? "strong" : lvl;
-    const srows = [...singles, A.combined].map((k) => ({ label: A.attacks[k].name, tags: [A.attacks[k].cost], values: { auc: A.results[k][sl].auc }, truth: base.auc }));
+    if (lvl === "none") {
+      // with no attack every bar would equal the no-attack AUC, so there is nothing to compare
+      singleBox.replaceChildren(el("p", { class: "note", text: "Move the slider to Mild or Strong to compare attacks." }));
+      return;
+    }
+    const srows = [...singles, A.combined].map((k) => ({ label: A.attacks[k].name, tags: [A.attacks[k].cost], values: { auc: A.results[k][lvl].auc }, truth: base.auc }));
     singleBox.replaceChildren(
-      el("p", { class: "note", text: lvl === "none" ? "Showing strong attacks (move the slider to compare mild ones)." : `Showing ${LABEL[lvl].toLowerCase()} attacks.` }),
+      el("p", { class: "note", text: `Showing ${LABEL[lvl].toLowerCase()} attacks.` }),
       legend([{ label: "AUC under the attack", color: S1 }, { label: "AUC with no attack", kind: "tick" }]),
       hbars({ rows: srows, series: [{ key: "auc", name: "AUC under attack", color: S1 }], truthName: "No attack", fmt: (x) => num(x, 3), max: 1 }),
       tableView(["Attack", "Cost", "Changes", "AUC (mild)", "AUC (strong)", "Fakes caught (strong)"],
