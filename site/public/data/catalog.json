@@ -37,7 +37,8 @@
     "light gbm",
     "gradient boosting"
    ],
-   "test_auc": 0.8426
+   "test_auc": 0.8426,
+   "verdict": "good"
   },
   {
    "key": "xgboost",
@@ -53,7 +54,8 @@
     "xgb",
     "boosted trees"
    ],
-   "test_auc": 0.8438
+   "test_auc": 0.8438,
+   "verdict": "good"
   },
   {
    "key": "rf",
@@ -70,7 +72,8 @@
     "random forest",
     "forest"
    ],
-   "test_auc": 0.829
+   "test_auc": 0.829,
+   "verdict": "good"
   },
   {
    "key": "svm_linear",
@@ -86,7 +89,8 @@
     "linear svm",
     "linear svc"
    ],
-   "test_auc": 0.822
+   "test_auc": 0.822,
+   "verdict": "weak"
   },
   {
    "key": "svm_rbf",
@@ -103,7 +107,8 @@
     "kernel svm",
     "rbf"
    ],
-   "test_auc": 0.8225
+   "test_auc": 0.8225,
+   "verdict": "weak"
   },
   {
    "key": "nmf_logreg",
@@ -119,7 +124,8 @@
     "nmf",
     "nmf logreg"
    ],
-   "test_auc": 0.7723
+   "test_auc": 0.7723,
+   "verdict": "weak"
   },
   {
    "key": "pca_logreg",
@@ -135,7 +141,8 @@
     "pca",
     "pca logreg"
    ],
-   "test_auc": 0.761
+   "test_auc": 0.761,
+   "verdict": "weak"
   },
   {
    "key": "isolation_forest",
@@ -151,7 +158,8 @@
     "iforest",
     "isolation forest"
    ],
-   "test_auc": 0.6385
+   "test_auc": 0.6385,
+   "verdict": "weak"
   },
   {
    "key": "lof",
@@ -167,7 +175,8 @@
     "lof",
     "local outlier factor"
    ],
-   "test_auc": 0.6009
+   "test_auc": 0.6009,
+   "verdict": "weak"
   },
   {
    "key": "one_class_svm",
@@ -184,7 +193,8 @@
     "one class svm",
     "one-class svm"
    ],
-   "test_auc": 0.5916
+   "test_auc": 0.5916,
+   "verdict": "weak"
   },
   {
    "key": "autoencoder_dense",
@@ -201,7 +211,8 @@
     "dense autoencoder",
     "ae"
    ],
-   "test_auc": 0.5497
+   "test_auc": 0.5497,
+   "verdict": "weak"
   },
   {
    "key": "cnn1d",
@@ -218,7 +229,8 @@
     "1d cnn",
     "convolutional"
    ],
-   "test_auc": 0.9996
+   "test_auc": 0.9996,
+   "verdict": "good"
   },
   {
    "key": "lstm",
@@ -233,7 +245,8 @@
    "aliases": [
     "lstm"
    ],
-   "test_auc": 0.9997
+   "test_auc": 0.9997,
+   "verdict": "good"
   },
   {
    "key": "rnn",
@@ -249,7 +262,8 @@
     "rnn",
     "recurrent"
    ],
-   "test_auc": 0.8862
+   "test_auc": 0.8862,
+   "verdict": "weak"
   },
   {
    "key": "autoencoder_lstm",
@@ -265,7 +279,8 @@
     "lstm autoencoder",
     "lstm ae"
    ],
-   "test_auc": 0.9878
+   "test_auc": 0.9878,
+   "verdict": "good"
   },
   {
    "key": "transformer",
@@ -280,7 +295,8 @@
    "aliases": [
     "transformer"
    ],
-   "test_auc": 0.8727
+   "test_auc": 0.8727,
+   "verdict": "weak"
   },
   {
    "key": "doc2vec_logreg",
@@ -295,7 +311,8 @@
    "aliases": [
     "doc2vec"
    ],
-   "test_auc": 0.855
+   "test_auc": 0.855,
+   "verdict": "weak"
   },
   {
    "key": "word2vec_logreg",
@@ -311,7 +328,8 @@
     "word2vec",
     "w2v"
    ],
-   "test_auc": 0.7222
+   "test_auc": 0.7222,
+   "verdict": "weak"
   },
   {
    "key": "gcn",
@@ -327,7 +345,8 @@
     "gcn",
     "graph convolutional network"
    ],
-   "test_auc": 0.9645
+   "test_auc": 0.9645,
+   "verdict": "weak"
   },
   {
    "key": "gat",
@@ -343,7 +362,8 @@
     "gat",
     "graph attention"
    ],
-   "test_auc": 0.9485
+   "test_auc": 0.9485,
+   "verdict": "weak"
   },
   {
    "key": "graphsage",
@@ -359,7 +379,8 @@
     "sage",
     "graph sage"
    ],
-   "test_auc": 0.9324
+   "test_auc": 0.9324,
+   "verdict": "weak"
   },
   {
    "key": "rgcn",
@@ -375,7 +396,8 @@
     "rgcn",
     "relational gcn"
    ],
-   "test_auc": 0.9341
+   "test_auc": 0.9341,
+   "verdict": "weak"
   },
   {
    "key": "node2vec_logreg",
@@ -390,7 +412,8 @@
    "aliases": [
     "node2vec"
    ],
-   "test_auc": 0.5906
+   "test_auc": 0.5906,
+   "verdict": "weak"
   },
   {
    "key": "deepwalk_logreg",
@@ -406,7 +429,8 @@
     "deepwalk",
     "deep walk"
    ],
-   "test_auc": 0.6322
+   "test_auc": 0.6322,
+   "verdict": "weak"
   },
   {
    "key": "label_spreading",
@@ -421,7 +445,8 @@
    "aliases": [
     "label propagation"
    ],
-   "test_auc": 0.4995
+   "test_auc": 0.4995,
+   "verdict": "weak"
   },
   {
    "key": "multimodal_fusion",
@@ -437,12 +462,58 @@
     "fusion",
     "multimodal"
    ],
-   "test_auc": 0.9484
+   "test_auc": 0.9484,
+   "verdict": "weak"
   }
  ],
  "excluded": {
   "belief_propagation": "Scores are inverted (test AUC 0.10).",
   "svd_logreg": "Identical to PCA + logistic regression.",
   "baseline_all_authentic": "Reference baseline, not a model."
+ },
+ "criteria": {
+  "correctness_informative_share": "Share of credit on the 6 features that actually drive the label",
+  "correctness_rank": "Rank correlation between the credit and the true per-account contributions",
+  "correctness_top5_precision": "Of the 5 top-ranked features, the share that truly matter",
+  "correctness_mask_auc": "How well the credit picks out the planted burst hours (0.5 = chance)",
+  "correctness_mask_auc_bot": "As above, bots only",
+  "correctness_mask_auc_troll": "As above, trolls only",
+  "correctness_mass_inside": "Share of credit inside the planted burst hours",
+  "correctness_marker_top1": "How often a planted marker word is ranked first",
+  "correctness_marker_mass": "Share of credit on planted marker words",
+  "correctness_ring_edge_auc": "How well edge credit picks out a troll's ring edges (0.5 = chance)",
+  "correctness_own_feature_rank": "Rank correlation between credit on the account's own stats and the true contributions",
+  "correctness_same_ring_top3": "Share of the top-3 seed labels that come from the troll's own ring",
+  "faithfulness": "Score change from deleting the top-ranked inputs, minus deleting random ones (in score standard deviations)",
+  "stability_noise": "Rank agreement of explanations after a tiny change to the input",
+  "stability_drop_word": "Rank agreement of explanations after deleting one unimportant word",
+  "stability_drop_item": "Rank agreement of explanations after removing one unimportant item",
+  "repeatability_seed": "Rank agreement of two runs with different random seeds",
+  "shortcut_top1": "How often #trending is ranked first in posts that contain it",
+  "shortcut_mass": "Share of credit on #trending in posts that contain it",
+  "seconds_per_explanation": "Seconds to explain one input (lower is faster)"
+ },
+ "thresholds": {
+  "auc_margin": 0.05,
+  "near_chance_auc": 0.6,
+  "val_test_gap": 0.05,
+  "train_test_gap": 0.1,
+  "informative_share": 0.75,
+  "group_share": 0.1,
+  "interaction_fraction": 0.5,
+  "localisation_auc": 0.7,
+  "marker_mass": 0.5,
+  "shortcut_effect": 0.5,
+  "timing_drop": 0.02,
+  "degree_corr": 0.7,
+  "seed_ring_top3": 0.75,
+  "block_follow": 0.5,
+  "block_ring_auc": 0.7,
+  "agree_high": 0.7,
+  "agree_low": 0.4,
+  "faithful_high": 0.5,
+  "faithful_low": 0.2,
+  "repeat_low": 0.8,
+  "stable_low": 0.7
  }
 }
