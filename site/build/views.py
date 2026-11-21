@@ -91,10 +91,26 @@ def _true_contrib(ids, features):
     return out
 
 
+def load_tabular_attributions(key, method):
+    """Step-2 attributions for one tabular model and method, with LIME's sign corrected.
+
+    Step 2 ran LIME in regression mode and read `next(iter(e.local_exp.values()))`. In regression
+    mode LIME stores the explanation under label 1 and a sign-flipped copy under label 0, and that
+    expression picks label 0, so every stored tabular LIME weight has the right size but the wrong
+    sign. Step 2's scores only used |attribution|, so they are unaffected; the signed example bars
+    on the site are not, so the sign is flipped back here.
+    """
+    a = pd.read_csv(STEP2 / "tabular" / f"attributions_{key}_{method}.csv")
+    if method == "LIME":
+        cols = [c for c in a.columns if c not in ("account_id", "kind")]
+        a[cols] = -a[cols]
+    return a
+
+
 def tabular_view(key):
     feats = [f["name"] for f in feature_roles()]
     m = BY_KEY[key]
-    attr = {meth: pd.read_csv(STEP2 / "tabular" / f"attributions_{key}_{meth}.csv") for meth in m.methods}
+    attr = {meth: load_tabular_attributions(key, meth) for meth in m.methods}
     first = attr[m.methods[0]]
     ids = first["account_id"].to_numpy()
     true = _true_contrib(ids, feats)
@@ -160,7 +176,7 @@ def sequences_view(key):
     gt = ground_truth()["sequences"]
     return {
         "n_hours": 168,
-        "planted_pattern": {"bot_periods": gt["bot_periods"], "troll_window_len": gt["window_len"]},
+        "planted_pattern": {"bot_periods": sorted({int(v["period"]) for v in gt["bot_periods"].values()}), "troll_window_len": int(gt["window_len"])},
         "planted_hour_share": _r(planted_share),
         "attribution_inside_planted": mass,
         "examples": examples,

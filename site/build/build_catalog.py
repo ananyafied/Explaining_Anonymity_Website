@@ -9,7 +9,7 @@ import csv
 import json
 from pathlib import Path
 
-from catalog import EXCLUDED, FAMILIES, MODELS
+from catalog import EXCLUDED, FAMILIES, FAMILY_INFO, METHOD_INFO, MODELS
 
 ROOT = Path(__file__).resolve().parents[2]
 STEP1 = ROOT / "outputs" / "step1_fit"
@@ -21,7 +21,8 @@ def main() -> None:
     with open(STEP1 / "metrics.csv", newline="") as f:
         auc = {r["model"]: float(r["test_roc_auc"]) for r in csv.DictReader(f)}
     catalog = {
-        "families": [{"key": k, "name": v[0]} for k, v in FAMILIES.items()],
+        "families": [{"key": k, "name": v[0], "about": FAMILY_INFO[k]} for k, v in FAMILIES.items()],
+        "methods_info": METHOD_INFO,
         "models": [
             {
                 "key": m.key,

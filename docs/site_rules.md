@@ -119,3 +119,16 @@ Every model page starts with four general checks: test on later data, choose the
 held-out data, keep a fixed audit sample, and test with cheaply faked inputs changed. Each weakness
 then adds one specific check (the `TRIGGERED_CHECKLIST` table in `rules.py`), shown with the weakness
 that triggered it.
+
+## 5. Known issue in the step 2 data: LIME signs (account stats)
+
+Notebook 02 ran LIME in regression mode and read `next(iter(e.local_exp.values()))`. In regression
+mode LIME stores the explanation under label 1 and a sign-flipped copy under label 0, and that
+expression picks label 0. Every stored account-stat LIME weight in
+`outputs/step2_explain/tabular/attributions_*_LIME.csv` therefore has the right size but the
+**wrong sign**. Notebook 05 reads LIME the same way for node2vec and DeepWalk.
+
+None of the step 2 scores are affected: correctness, faithfulness, agreement and stability all use
+absolute values or rankings by size. The website only shows signs in the per-account examples, and
+`site/build/views.py` flips the tabular LIME sign back before drawing them (tested in
+`tests/test_site_views.py`). The stored files are left as they were.
