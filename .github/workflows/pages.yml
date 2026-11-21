@@ -1,6 +1,8 @@
 # Publish site/public/ to GitHub Pages on every push to main.
 # The site is static: its data (site/public/data/*.json) is generated locally by site/build/
 # and committed, so this workflow does not install Python or run any models.
+# If a deploy fails with "No artifacts named github-pages were found", that is a transient GitHub
+# error: re-run the workflow from the Actions tab (or push again).
 name: Deploy site to GitHub Pages
 
 on:
