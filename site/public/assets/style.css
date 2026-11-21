@@ -253,3 +253,9 @@ footer.site p { margin: 4px 0; }
 .signed thead th .legend { justify-content: center; }
 .overview > .card + .card { margin-top: 0; }
 .overview li a { min-width: 0; }
+
+/* attack strength slider */
+.strength-wrap { max-width: 420px; margin: 14px 0 4px; }
+.strength-wrap label { display: block; font-weight: 600; font-size: 14px; margin-bottom: 4px; }
+input.strength { width: 100%; accent-color: var(--accent); margin: 0; }
+.strength-labels { display: flex; justify-content: space-between; font-size: 13px; color: var(--text-2); margin-top: 2px; }

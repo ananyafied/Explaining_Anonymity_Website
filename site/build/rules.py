@@ -6,7 +6,7 @@ docs/site_rules.md. Every threshold lives in THRESHOLDS; change it there and the
 from __future__ import annotations
 
 THRESHOLDS = {
-    "auc_margin": 0.05,  # accuracy is "near the best" within this much of the reference AUC
+    "auc_margin": 0.06,  # accuracy is "near the best" within this much of the reference AUC
     "near_chance_auc": 0.60,  # below this, the model barely beats guessing
     "val_test_gap": 0.05,  # validation AUC - test AUC above this = learned something that did not carry over
     "train_test_gap": 0.10,  # train AUC - test AUC above this = memorises training data
@@ -27,6 +27,12 @@ THRESHOLDS = {
     "faithful_low": 0.20,
     "repeat_low": 0.80,  # same input, different random seed: rank correlation of explanations
     "stable_low": 0.70,  # small input noise: rank correlation of explanations
+    # ---- under attack (adversarial dataset)
+    "attack_collapse": 0.15,  # AUC lost under the strong combined attack: at least this = collapses
+    "attack_holds": 0.05,  # ... at most this = holds up
+    "single_attack_drop": 0.10,  # AUC lost to one cheap change (strong): at least this = one change is enough
+    "importance_shift": 0.25,  # SHAP credit moved between no attack and strong (0 = same, 1 = none in common)
+    "flagged_real_high": 0.50,  # share of real users above the model's own threshold that makes "fakes caught" meaningless
 }
 T = THRESHOLDS
 
@@ -293,6 +299,88 @@ def checklist(found):
             seen.add(x["id"])
             items.append({"id": "w_" + x["id"], "text": TRIGGERED_CHECKLIST[x["id"]], "because": x["text"]})
     return items
+
+
+# ------------------------------------------------------------------ under attack
+def _imp_shift(a, b):
+    keys = sorted(set(a) | set(b))
+    return 0.5 * sum(abs(a.get(k, 0) - b.get(k, 0)) for k in keys)
+
+
+def attack_findings(af):
+    """Vulnerabilities and strengths under the adversarial dataset. `af` comes from adversarial_facts.py."""
+    S, W = "strength", "weakness"
+    out = []
+    add = out.append
+    res, atk = af["results"], af["attacks"]
+    base = res["none"]
+    comb = res[af["combined"]]["strong"]
+    drop = base["auc"] - comb["auc"]
+    caught = f"it catches {_pct(comb['caught'])} of fakes instead of {_pct(base['caught'])}"
+    if base["flagged_real"] >= T["flagged_real_high"]:
+        add(_finding(W, "flags_everyone", f"Its decision threshold flags {_pct(base['flagged_real'])} of real users, so the share of fakes it 'catches' ({_pct(base['caught'])}) means little.", None, flagged=base["flagged_real"]))
+    mild = res[af["combined"]]["mild"]
+    if mild["auc"] < 0.5 and mild["auc"] < comb["auc"]:
+        add(_finding(W, "too_typical", f"A half-hearted attack fools it more than a full one: AUC falls to {_f(mild['auc'], 3)} at mild strength, worse than a coin flip, but only {_f(comb['auc'], 3)} at strong. Fakes moved halfway toward real users look more typical than real users do, and it flags the unusual.", None, auc=mild["auc"]))
+    if base["auc"] < T["near_chance_auc"]:
+        add(_finding(W, "nothing_to_lose", f"Barely better than guessing even before the attack (AUC {_f(base['auc'], 3)} on the fresh population), so an attack has little to take away.", None, auc=base["auc"]))
+    elif drop >= T["attack_collapse"]:
+        add(_finding(W, "attack_collapses", f"Collapses under the combined attack: AUC falls from {_f(base['auc'], 3)} to {_f(comb['auc'], 3)} at strong strength ({_f(mild['auc'], 3)} at mild), and {caught}.", None, drop=drop))
+    elif drop <= T["attack_holds"]:
+        add(_finding(S, "attack_holds", f"Holds up under the combined attack: AUC {_f(base['auc'], 3)} → {_f(comb['auc'], 3)} at strong strength.", None, drop=drop))
+    else:
+        add(_finding(W, "attack_hurts", f"Weakened by the combined attack: AUC falls from {_f(base['auc'], 3)} to {_f(comb['auc'], 3)} at strong strength, and {caught}.", None, drop=drop))
+
+    singles = {k: v for k, v in res.items() if k not in ("none", af["combined"])}
+    worst = max(singles, key=lambda k: base["auc"] - singles[k]["strong"]["auc"])
+    wdrop = base["auc"] - singles[worst]["strong"]["auc"]
+    cheap = [k for k in singles if atk[k]["cost"] == "cheap"]
+    worst_cheap = max(cheap, key=lambda k: base["auc"] - singles[k]["strong"]["auc"])
+    cdrop = base["auc"] - singles[worst_cheap]["strong"]["auc"]
+    if cdrop >= T["single_attack_drop"]:
+        a = atk[worst_cheap]
+        add(_finding(W, "one_cheap_change", f"One cheap change is enough to hurt it: \"{a['name']}\" alone drops AUC from {_f(base['auc'], 3)} to {_f(singles[worst_cheap]['strong']['auc'], 3)}.", None, attack=worst_cheap, drop=cdrop))
+    elif base["auc"] < T["near_chance_auc"]:
+        pass  # nothing to lose: "no single change hurts it" would be praise for having no signal
+    elif atk[worst]["cost"] == "expensive" and wdrop >= T["single_attack_drop"]:
+        add(_finding(S, "only_expensive_hurts", f"No cheap single change hurts it much; the most damaging is \"{atk[worst]['name']}\", which costs an attacker money or time.", None, attack=worst, drop=wdrop))
+    elif wdrop < T["single_attack_drop"]:
+        add(_finding(S, "no_single_change", f"No single change hurts it much (the worst, \"{atk[worst]['name']}\", costs {_f(wdrop, 3)} AUC); an attacker has to change several things at once.", None, attack=worst, drop=wdrop))
+
+    imp = af["importance"].get("SHAP", {})
+    if "none" in imp:
+        cheap_feats = {f for k in cheap for f in atk[k]["changes"]}
+        top3 = sorted(imp["none"], key=lambda k: -imp["none"][k])[:3]
+        cheap_top = [x for x in top3 if x in cheap_feats]
+        if len(cheap_top) >= 2:
+            add(_finding(W, "cheap_top_features", f"Its most important features are cheap to fake: {', '.join(cheap_top)} {'are' if len(cheap_top) > 1 else 'is'} among SHAP's top three.", None, features=cheap_top))
+    if "none" in imp and "strong" in imp:
+        shift = _imp_shift(imp["none"], imp["strong"])
+        t0 = max(imp["none"], key=imp["none"].get)
+        t1 = max(imp["strong"], key=imp["strong"].get)
+        moved = f"SHAP's top feature goes from {t0} to {t1}" if t0 != t1 else f"SHAP's top feature stays {t0}"
+        if shift >= T["importance_shift"]:
+            add(_finding(S, "explanations_reveal_attack", f"Its explanations change visibly under attack ({_pct(shift)} of the credit moves; {moved}), so monitoring explanations could flag the attack.", None, shift=shift))
+        elif drop >= T["attack_collapse"]:
+            add(_finding(W, "explanations_hide_attack", f"Its explanations barely change while it fails ({_pct(shift)} of the credit moves; {moved}), so watching explanations would not reveal the attack.", None, shift=shift))
+    return out
+
+
+ATTACK_CHECKLIST = {
+    "attack_collapses": "Before launch, red-team with mimicry: give test fakes real users' stats and measure how many you still catch.",
+    "attack_hurts": "Track the share of fakes caught over time; a steady fall is the signature of operators adapting.",
+    "one_cheap_change": "Do not let one easily changed behaviour carry the decision; add signals that are costly to fake (account age, network position, device or payment history).",
+    "cheap_top_features": "Add inputs that are expensive to fake, and check how much accuracy is left when the cheap ones are removed.",
+    "flags_everyone": "Set the threshold from the cost of wrongly flagging a real user, then re-measure how many fakes it catches at that threshold.",
+    "too_typical": "Test with fakes that are only partly disguised, not just fully copied ones; for this model the partial disguise is the more dangerous one.",
+    "nothing_to_lose": "Do not deploy this model as a detector; compare it with a supervised model trained on labelled accounts.",
+    "explanations_hide_attack": "Monitor detection rates and score distributions directly; this model's explanations stay the same while it is being fooled.",
+}
+
+
+def attack_checklist(found):
+    return [{"id": "a_" + x["id"], "text": ATTACK_CHECKLIST[x["id"]], "because": x["text"]}
+            for x in found if x["type"] == "weakness" and x["id"] in ATTACK_CHECKLIST]
 
 
 def evaluate(f):

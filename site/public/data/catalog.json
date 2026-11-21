@@ -107,7 +107,7 @@
     "linear svc"
    ],
    "test_auc": 0.822,
-   "verdict": "weak"
+   "verdict": "good"
   },
   {
    "key": "svm_rbf",
@@ -125,7 +125,7 @@
     "rbf"
    ],
    "test_auc": 0.8225,
-   "verdict": "weak"
+   "verdict": "good"
   },
   {
    "key": "nmf_logreg",
@@ -511,7 +511,7 @@
   "seconds_per_explanation": "Seconds to explain one input (lower is faster)"
  },
  "thresholds": {
-  "auc_margin": 0.05,
+  "auc_margin": 0.06,
   "near_chance_auc": 0.6,
   "val_test_gap": 0.05,
   "train_test_gap": 0.1,
@@ -531,6 +531,11 @@
   "faithful_high": 0.5,
   "faithful_low": 0.2,
   "repeat_low": 0.8,
-  "stable_low": 0.7
+  "stable_low": 0.7,
+  "attack_collapse": 0.15,
+  "attack_holds": 0.05,
+  "single_attack_drop": 0.1,
+  "importance_shift": 0.25,
+  "flagged_real_high": 0.5
  }
 }

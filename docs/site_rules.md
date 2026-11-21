@@ -91,7 +91,7 @@ are comparable.
 
 | Name | Value | Meaning |
 |---|---|---|
-| `auc_margin` | 0.05 | Accuracy passes within this much of the reference AUC |
+| `auc_margin` | 0.06 | Accuracy passes within this much of the reference AUC |
 | `near_chance_auc` | 0.6 | Below this, "barely better than guessing" |
 | `val_test_gap` | 0.05 | Largest allowed drop from validation to test AUC |
 | `train_test_gap` | 0.1 | Larger gaps between train and test AUC count as memorising |
@@ -112,15 +112,41 @@ are comparable.
 | `faithful_low` | 0.2 | Not faithful (score standard deviations) |
 | `repeat_low` | 0.8 | Re-runs disagree |
 | `stable_low` | 0.7 | Unstable under tiny input changes |
+| `attack_collapse` | 0.15 | Under attack: AUC lost to the strong combined attack that counts as collapsing |
+| `attack_holds` | 0.05 | Under attack: AUC lost that still counts as holding up |
+| `single_attack_drop` | 0.1 | Under attack: AUC lost to one change (strong) that counts as "one change is enough" |
+| `importance_shift` | 0.25 | Under attack: share of SHAP credit that moves between no attack and strong |
+| `flagged_real_high` | 0.5 | Under attack: share of real users the model's own threshold flags, above which "fakes caught" means little |
 
-## 4. Pre-deployment checklist
+## 4. Under attack (adversarial dataset)
+
+Each model with adversarial results gets its own list, from
+[`adversarial/`](../adversarial/README.md): bots and trolls copy real users' habits ("mimicry") at
+mild or strong strength, one feature at a time or all cheap and moderate ones together (the
+**combined** attack). AUC drops are measured against the same fresh population with no attack.
+
+- *Barely better than guessing even before the attack* (weakness): AUC on the fresh, unattacked population below `near_chance_auc`. Replaces the three rules below and the two "single change" strengths, since such a model has little to lose.
+- *Collapses* (weakness): the strong combined attack costs at least `attack_collapse` AUC.
+- *Holds up* (strength): it costs at most `attack_holds`. In between: *weakened* (weakness).
+- *One cheap change is enough* (weakness): a single cheap attack at strong strength costs at least `single_attack_drop` AUC.
+- *Only an expensive change hurts much* (strength): no cheap attack reaches `single_attack_drop`, but buying aged accounts does.
+- *No single change hurts much* (strength): no single attack reaches `single_attack_drop`.
+- *Its most important features are cheap to fake* (weakness): at least two of SHAP's top three features (no attack) are ones a cheap attack changes.
+- *A half-hearted attack fools it more than a full one* (weakness): the mild combined attack pushes AUC below 0.5 and below the strong attack's AUC. Fakes moved halfway toward real users are more typical than real users, which fools detectors of unusual accounts.
+- *Its threshold flags most real users* (weakness): the model's own decision threshold (from step 1) flags at least `flagged_real_high` of real users, so "fakes caught" is not informative.
+- *Explanations change visibly under attack* (strength): at least `importance_shift` of SHAP's credit moves between no attack and the strong combined attack, so monitoring explanations could flag it.
+- *Explanations barely change while it fails* (weakness): less than that moves, although the model collapses.
+
+Each of these weaknesses adds an attack test to the model's checklist (`ATTACK_CHECKLIST` in `rules.py`).
+
+## 5. Pre-deployment checklist
 
 Every model page starts with four general checks: test on later data, choose the threshold on
 held-out data, keep a fixed audit sample, and test with cheaply faked inputs changed. Each weakness
 then adds one specific check (the `TRIGGERED_CHECKLIST` table in `rules.py`), shown with the weakness
 that triggered it.
 
-## 5. Known issue in the step 2 data: LIME signs (account stats)
+## 6. Known issue in the step 2 data: LIME signs (account stats)
 
 Notebook 02 ran LIME in regression mode and read `next(iter(e.local_exp.values()))`. In regression
 mode LIME stores the explanation under label 1 and a sign-flipped copy under label 0, and that

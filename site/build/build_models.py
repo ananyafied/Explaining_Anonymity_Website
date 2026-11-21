@@ -9,6 +9,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import adversarial_facts as A
 import build_catalog
 import facts as F
 import rules as R
@@ -63,6 +64,27 @@ def model_payload(key: str) -> dict:
         "evidence": {k: f[k] for k in ("credit", "interaction", "timing", "reliance", "degree_alone_auc", "embedding_probe", "answer_key", "coalition_auc") if k in f},
         **ev,
         "view": V.model_view(key),
+        "attack": attack_payload(key, m.family),
+    }
+
+
+def attack_payload(key: str, family: str):
+    """Adversarial results, vulnerabilities and attack-specific checklist; None until the family is attacked."""
+    af = A.adversarial_facts(key, family)
+    if af is None:
+        return None
+    found = R.attack_findings(af)
+    return {
+        "attacks": af["attacks"],
+        "combined": af["combined"],
+        "threshold": af["threshold"],
+        "n": af["n"],
+        "n_fake": af["n_fake"],
+        "results": af["results"],
+        "importance": af["importance"],
+        "strengths": [x for x in found if x["type"] == "strength"],
+        "weaknesses": [x for x in found if x["type"] == "weakness"],
+        "checklist": R.attack_checklist(found),
     }
 
 
