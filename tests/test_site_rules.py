@@ -159,6 +159,8 @@ def attack_facts(none=0.85, comb_strong=0.55, comb_mild=0.70, single=None, shap_
         ("posting_rate", "cheap", "posts_per_day"), ("replies", "cheap", "reply_fraction"),
         ("account_age", "expensive", "account_age_days"), ("combined", "moderate", "posts_per_day")]}
     single = single or {"posting_rate": 0.80, "replies": 0.82, "account_age": 0.84}
+    for k in single:
+        atk.setdefault(k, {"name": k.title(), "cost": "cheap", "changes": [k]})
     res = {"none": {"auc": none, "caught": 0.7, "flagged_real": 0.2}, "combined": {"mild": {"auc": comb_mild, "caught": 0.5}, "strong": {"auc": comb_strong, "caught": 0.2}}}
     for k, v in single.items():
         res[k] = {"mild": {"auc": (none + v) / 2, "caught": 0.6}, "strong": {"auc": v, "caught": 0.5}}
@@ -205,3 +207,24 @@ def test_anomaly_style_attack_rules():
     got = ids(R.attack_findings(f))
     assert {"flags_everyone", "too_typical", "nothing_to_lose"} <= set(got)
     assert not {"attack_holds", "attack_hurts", "attack_collapses", "no_single_change", "only_expensive_hurts"} & set(got)
+
+
+def test_volume_only_rule_for_activity_models():
+    f = attack_facts(single={"shift_bursts": 0.85, "daily_rhythm": 0.849, "match_volume": 0.60, "posting_rate": 0.85, "replies": 0.85, "account_age": 0.85})
+    f["importance"] = {}
+    assert "volume_only" in ids(R.attack_findings(f))
+    f = attack_facts(single={"shift_bursts": 0.70, "daily_rhythm": 0.849, "match_volume": 0.60, "posting_rate": 0.85, "replies": 0.85, "account_age": 0.85})
+    f["importance"] = {}
+    assert "volume_only" not in ids(R.attack_findings(f))
+
+
+def test_text_style_attack_rules():
+    f = attack_facts(none=0.94, comb_mild=0.6, comb_strong=0.05)
+    f["results"]["none"]["caught"] = 0.2
+    f.update(family="text", original_test_auc=0.87)
+    got = ids(R.attack_findings(f))
+    assert {"threshold_out_of_date", "better_without_trap", "attack_inverts"} <= set(got)
+    f = attack_facts()
+    f.update(family="tabular", original_test_auc=0.80)
+    got = ids(R.attack_findings(f))
+    assert not {"threshold_out_of_date", "better_without_trap", "attack_inverts"} & set(got)

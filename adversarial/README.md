@@ -6,11 +6,13 @@ behaviours. This folder builds a test population in which **bots and trolls acti
 human**, so the website can show how each model, and each model's explanations, hold up.
 
 ```bash
-python -m adversarial --seed 1 --out adversarial/data      # ~2 seconds, deterministic
-python -m adversarial.evaluate_tabular                       # scores and explains the 11 account-stat models
+python -m adversarial --seed 1 --out adversarial/data      # ~10 seconds, deterministic
+python -m adversarial.evaluate_tabular                       # 11 account-stat models (~10 minutes)
+python -m adversarial.evaluate_sequences                     # 4 hourly-activity models (~2 minutes)
+python -m adversarial.evaluate_text                          # 3 text models
 ```
 
-The generated data (`adversarial/data/`, about 26 MB) is not committed, for the same reason as
+The generated data (`adversarial/data/`, about 72 MB) is not committed, for the same reason as
 `data/synthetic/`: it is rebuilt exactly from the seed. Results are committed in
 `outputs/step3_adversarial/`.
 
@@ -20,8 +22,9 @@ The generated data (`adversarial/data/`, about 26 MB) is not committed, for the 
   and no label changes: an attacked bot is still a bot.
 - **`#trending` is gone.** It is removed from every post in the population, so no model can lean
   on it. (In the original data it was a trap that only signalled fakes during training.)
-- **Account stats are attacked so far** (Phase 3). Hourly activity and post text attacks follow
-  in Phase 4; until then those parts of the population are as generated.
+- **Account stats, hourly activity and post text are attacked**, each separately (the follower
+  graph is not). An account-stat attack changes only account stats, an activity attack only the
+  168 hourly counts, a text attack only the posts, so each model family is tested on its own input.
 
 ## 2. A fresh population
 
@@ -33,7 +36,7 @@ on accounts it has never seen, so any drop under attack is caused by the attack.
 Results use the population's **test split** (991 accounts, 30% fake), the same size as the
 original test split.
 
-## 3. The attack: mimicry
+## 3. Account-stat attacks: mimicry (Phase 3)
 
 Each fake account picks one real user from the training split (its "donor") and moves the
 attacked features toward that person's values:
@@ -50,7 +53,7 @@ donor per fake account keeps the copied habits realistic together.
 The attacker never sees the models (a black-box attack). It copies how real people behave, which
 is what an operator can observe on the platform.
 
-## 4. What each attack changes, and what it costs
+## 4. What each account-stat attack changes, and what it costs
 
 | Attack | Feature changed | Cost | What an operator would do |
 |---|---|---|---|
@@ -65,22 +68,56 @@ is what an operator can observe on the platform.
 The decoys (`follower_following_ratio`, `hashtag_rate`) and noise features are not attacked: they
 are unrelated to being fake, so a real user's values look the same as a fake's already.
 
-## 5. Files
+## 5. Hourly activity attacks (Phase 4)
+
+These work on the 168 hourly post counts of every bot and troll. Strength again runs from none
+through mild (0.5) to strong (1). The planted-pattern mask moves with the attack, so explanations
+can still be scored against it.
+
+| Attack | What changes | Cost |
+|---|---|---|
+| Move bursts to random times | Each planted run (a bot's burst hour, a troll's 3-hour window) is swapped to a random free place with probability *s*: bots lose their fixed rhythm, trolls stop posting in sync with their ring | cheap |
+| Spread bursts out | A share (0.75 *s*) of each planted hour's extra posts moves to the two hours on either side; the week's total is unchanged | cheap |
+| Fake a daily rhythm | Bots only (trolls already have one): each background post is re-timed with probability *s* to follow a human day | cheap |
+| Post as much as a real user | The week is thinned out (or topped up), keeping its shape, so its total moves a share *s* of the way (in log space) to the donor's weekly total | cheap |
+| **All activity changes** | The four above, in that order | cheap |
+
+## 6. Text attacks (Phase 4)
+
+These work on the posts of every bot and troll. `#trending` is already gone everywhere.
+
+| Attack | What changes | Cost |
+|---|---|---|
+| Disguise the giveaway words | Each marker word is misspelled with probability *s* (`giveaway` → `g1veaway`, `sheep` → `sh33p`) | cheap |
+| Swap in synonyms | Each marker word is replaced with probability *s* by an ordinary word the models never saw (`giveaway` → `freebie`, `idiot` → `fool`) | cheap |
+| Pad posts with ordinary words | *s* × (post length) everyday words are inserted at random places (+50% at mild, +100% at strong) | cheap |
+| **All text changes** | Each marker word is disguised or swapped (half each) with probability *s*, and the post is padded | cheap |
+
+Two things worth knowing when reading the results. The replacement words are new to every model,
+so to these word-level models a disguise and a synonym look the same: an unknown word. And the
+transformer only reads the first 14 words of a post (its training limit), so a padded post is cut
+there, which can drop the giveaway word entirely, the way a real length limit would.
+
+## 7. Files
 
 ```
 adversarial/data/
   manifest.json                 seed, strengths, attacks, list of variants
   base/                         the unattacked population (same files as data/synthetic/)
-  <attack>_<strength>/          e.g. combined_strong/, replies_mild/
-    accounts.csv                the population with that attack applied
-    truth/attack_truth.csv      per account: attacked?, donor_id, and the original value of every changed feature
+  <attack>_<strength>/          only the files the attack changes:
+    accounts.csv                account-stat attacks (e.g. combined_strong/, replies_mild/)
+    truth/attack_truth.csv        per account: attacked?, donor_id, original value of every changed feature
+    sequences.npz               activity attacks (e.g. activity_combined_strong/)
+    truth/sequence_masks.npz      the planted-pattern hours after the attack
+    posts.csv                   text attacks (e.g. text_combined_mild/)
+    truth/text_attack_truth.csv   per post: original text, replaced words, words added
 ```
 
 `base/truth/accounts_truth.csv` keeps the generating formula's `true_logit` for the **unattacked**
 behaviour. After an attack, the formula no longer describes the fakes' stats; the label is still
 the truth.
 
-## 6. How the models are evaluated
+## 8. How the models are evaluated
 
 `evaluate_tabular.py` loads the 11 account-stat models exactly as trained (and checks that they
 reproduce their step-1 predictions), including the original training data's scaling and SHAP
@@ -96,11 +133,22 @@ For the combined attack at all three strengths it also explains 50 humans, 50 bo
 from the test split with **SHAP and LIME**, using the step-2 settings (100 background accounts
 summarised to 10, 1,000 KernelSHAP samples, 1,500 LIME samples, seed 0).
 
-## 7. Tests
+`evaluate_sequences.py` and `evaluate_text.py` do the same for the activity and text models, with
+each model's own two explanation methods and the step-2 settings (notebooks 03 and 04). Activity
+inputs are standardised with the original training mean and std. Text accounts are scored as in
+step 1, except that doc2vec infers every account's vector (all accounts are new). Explanations are
+summarised as the share of credit on the planted signal as the attack moves it: the planted hours
+(50 bots and 50 trolls) or the giveaway word or its replacement (60 posts by fake accounts).
 
-`tests/test_adversarial.py` checks that the generator produces the same format as the original
-data, gives the same output for the same seed, never changes real users or labels, keeps real users
+## 9. Tests
+
+`tests/test_adversarial.py` checks, for all three families, that the generator produces the same
+format as the original data, gives the same output for the same seed, never changes real users or labels, keeps real users
 statistically like the original population's, moves only the attacked features (and moves them
 toward real users: halfway at mild, all the way at strong), keeps the weekly post count consistent
 with the daily rate, removes `#trending`, and does not leak between splits (donors come only from
-training-split real users; linked accounts never straddle splits).
+training-split real users; linked accounts never straddle splits). For activity and text it also
+checks that real users' weeks and posts never change, that timing attacks keep each week's total,
+that moved bursts really move, that volume matching brings fakes' totals to real users' levels,
+that strong word attacks leave no marker word in any fake post, that replacement words never
+appear in the original posts, and that padding adds the promised number of words.

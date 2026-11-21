@@ -82,6 +82,8 @@ def attack_payload(key: str, family: str):
         "n_fake": af["n_fake"],
         "results": af["results"],
         "importance": af["importance"],
+        "signal_credit": af["signal_credit"],
+        "examples": af["examples"],
         "strengths": [x for x in found if x["type"] == "strength"],
         "weaknesses": [x for x in found if x["type"] == "weakness"],
         "checklist": R.attack_checklist(found),

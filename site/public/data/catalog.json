@@ -536,6 +536,9 @@
   "attack_holds": 0.05,
   "single_attack_drop": 0.1,
   "importance_shift": 0.25,
-  "flagged_real_high": 0.5
+  "flagged_real_high": 0.5,
+  "caught_low": 0.5,
+  "inverted_auc": 0.4,
+  "trap_gain": 0.03
  }
 }

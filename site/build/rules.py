@@ -32,7 +32,10 @@ THRESHOLDS = {
     "attack_holds": 0.05,  # ... at most this = holds up
     "single_attack_drop": 0.10,  # AUC lost to one cheap change (strong): at least this = one change is enough
     "importance_shift": 0.25,  # SHAP credit moved between no attack and strong (0 = same, 1 = none in common)
-    "flagged_real_high": 0.50,  # share of real users above the model's own threshold that makes "fakes caught" meaningless
+    "flagged_real_high": 0.50,
+    "caught_low": 0.50,  # share of fakes the model's own threshold catches with NO attack, below which the threshold is out of date
+    "inverted_auc": 0.40,  # strong combined attack pushing AUC below this = fakes now look more real than real users
+    "trap_gain": 0.03,  # AUC gained on fresh accounts without #trending vs the original test set  # share of real users above the model's own threshold that makes "fakes caught" meaningless
 }
 T = THRESHOLDS
 
@@ -316,20 +319,29 @@ def attack_findings(af):
     base = res["none"]
     comb = res[af["combined"]]["strong"]
     drop = base["auc"] - comb["auc"]
+    # the "fakes caught" comparison only means something when the threshold worked without an attack
+    caught_ok = base["caught"] >= T["caught_low"] and base["flagged_real"] < T["flagged_real_high"]
     caught = f"it catches {_pct(comb['caught'])} of fakes instead of {_pct(base['caught'])}"
     if base["flagged_real"] >= T["flagged_real_high"]:
         add(_finding(W, "flags_everyone", f"Its decision threshold flags {_pct(base['flagged_real'])} of real users, so the share of fakes it 'catches' ({_pct(base['caught'])}) means little.", None, flagged=base["flagged_real"]))
+    elif base["caught"] < T["caught_low"]:
+        add(_finding(W, "threshold_out_of_date", f"Its decision threshold now catches only {_pct(base['caught'])} of fakes even with no attack. It was tuned on data where #trending made fakes easy to spot, and is far too strict without it.", None, caught=base["caught"]))
+    orig = af.get("original_test_auc")
+    if af.get("family") == "text" and orig is not None and base["auc"] - orig >= T["trap_gain"]:
+        add(_finding(S, "better_without_trap", f"Better once #trending is gone: AUC {_f(base['auc'], 3)} on fresh posts without it, against {_f(orig, 3)} on the original test set, where the hashtag misled it.", None, gain=base["auc"] - orig))
     mild = res[af["combined"]]["mild"]
+    if comb["auc"] < T["inverted_auc"]:
+        add(_finding(W, "attack_inverts", f"The attack turns it upside down: under the strong combined attack AUC is {_f(comb['auc'], 3)}, so it now rates the disguised fakes as more genuine than real users.", None, auc=comb["auc"]))
     if mild["auc"] < 0.5 and mild["auc"] < comb["auc"]:
         add(_finding(W, "too_typical", f"A half-hearted attack fools it more than a full one: AUC falls to {_f(mild['auc'], 3)} at mild strength, worse than a coin flip, but only {_f(comb['auc'], 3)} at strong. Fakes moved halfway toward real users look more typical than real users do, and it flags the unusual.", None, auc=mild["auc"]))
     if base["auc"] < T["near_chance_auc"]:
         add(_finding(W, "nothing_to_lose", f"Barely better than guessing even before the attack (AUC {_f(base['auc'], 3)} on the fresh population), so an attack has little to take away.", None, auc=base["auc"]))
     elif drop >= T["attack_collapse"]:
-        add(_finding(W, "attack_collapses", f"Collapses under the combined attack: AUC falls from {_f(base['auc'], 3)} to {_f(comb['auc'], 3)} at strong strength ({_f(mild['auc'], 3)} at mild), and {caught}.", None, drop=drop))
+        add(_finding(W, "attack_collapses", f"Collapses under the combined attack: AUC falls from {_f(base['auc'], 3)} to {_f(comb['auc'], 3)} at strong strength ({_f(mild['auc'], 3)} at mild){', and ' + caught if caught_ok else ''}.", None, drop=drop))
     elif drop <= T["attack_holds"]:
         add(_finding(S, "attack_holds", f"Holds up under the combined attack: AUC {_f(base['auc'], 3)} → {_f(comb['auc'], 3)} at strong strength.", None, drop=drop))
     else:
-        add(_finding(W, "attack_hurts", f"Weakened by the combined attack: AUC falls from {_f(base['auc'], 3)} to {_f(comb['auc'], 3)} at strong strength, and {caught}.", None, drop=drop))
+        add(_finding(W, "attack_hurts", f"Weakened by the combined attack: AUC falls from {_f(base['auc'], 3)} to {_f(comb['auc'], 3)} at strong strength{', and ' + caught if caught_ok else ''}.", None, drop=drop))
 
     singles = {k: v for k, v in res.items() if k not in ("none", af["combined"])}
     worst = max(singles, key=lambda k: base["auc"] - singles[k]["strong"]["auc"])
@@ -347,7 +359,13 @@ def attack_findings(af):
     elif wdrop < T["single_attack_drop"]:
         add(_finding(S, "no_single_change", f"No single change hurts it much (the worst, \"{atk[worst]['name']}\", costs {_f(wdrop, 3)} AUC); an attacker has to change several things at once.", None, attack=worst, drop=wdrop))
 
-    imp = af["importance"].get("SHAP", {})
+    if all(k in singles for k in ("shift_bursts", "daily_rhythm", "match_volume")):
+        timing = max(base["auc"] - singles[k]["strong"]["auc"] for k in ("shift_bursts", "daily_rhythm"))
+        vol = base["auc"] - singles["match_volume"]["strong"]["auc"]
+        if timing < T["timing_drop"] and vol >= T["single_attack_drop"]:
+            add(_finding(W, "volume_only", f"Only volume matters to it: moving bursts or faking a daily rhythm changes AUC by at most {_f(max(timing, 0), 3)}, but posting as much as a real user drops it from {_f(base['auc'], 3)} to {_f(singles['match_volume']['strong']['auc'], 3)}.", None, timing=timing, volume=vol))
+
+    imp = (af.get("importance") or {}).get("SHAP", {})
     if "none" in imp:
         cheap_feats = {f for k in cheap for f in atk[k]["changes"]}
         top3 = sorted(imp["none"], key=lambda k: -imp["none"][k])[:3]
@@ -374,6 +392,9 @@ ATTACK_CHECKLIST = {
     "flags_everyone": "Set the threshold from the cost of wrongly flagging a real user, then re-measure how many fakes it catches at that threshold.",
     "too_typical": "Test with fakes that are only partly disguised, not just fully copied ones; for this model the partial disguise is the more dangerous one.",
     "nothing_to_lose": "Do not deploy this model as a detector; compare it with a supervised model trained on labelled accounts.",
+    "threshold_out_of_date": "Re-tune the decision threshold on recent data without the shortcut, then re-measure precision and recall.",
+    "attack_inverts": "Watch for score distributions shifting below real users' scores; an inverted model hides fakes rather than just missing them.",
+    "volume_only": "Test with fake accounts that post at a normal person's volume; this model cannot see timing patterns.",
     "explanations_hide_attack": "Monitor detection rates and score distributions directly; this model's explanations stay the same while it is being fooled.",
 }
 
