@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Explaining Anonymity</title>
+<meta name="description" content="How explainable are the models that detect fake, bot and troll accounts? An interactive look at 26 models on synthetic data with a known answer key.">
+<style>
+  :root {
+    --bg: #fbfaf7; --surface: #ffffff; --text: #1d1f23; --muted: #5d6470;
+    --border: #e3e0d8; --accent: #0f766e; --accent-soft: #e6f2f0;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #14161a; --surface: #1c1f24; --text: #e8e6e1; --muted: #9aa1ab;
+      --border: #2c3038; --accent: #4fb8ac; --accent-soft: #1d2d2c;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font: 16px/1.55 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  main { max-width: 760px; margin: 0 auto; padding: 56px 16px 64px; }
+  .tag {
+    display: inline-block; font-size: 13px; font-weight: 600; letter-spacing: .02em;
+    color: var(--accent); background: var(--accent-soft); padding: 3px 10px; border-radius: 99px;
+  }
+  h1 { font-size: clamp(32px, 6vw, 44px); line-height: 1.1; margin: 16px 0 12px; letter-spacing: -.01em; }
+  .lede { font-size: 18px; color: var(--muted); margin: 0 0 32px; max-width: 60ch; }
+  h2 { font-size: 15px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: 40px 0 12px; }
+  .families { display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); }
+  .family { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; }
+  .family h3 { margin: 0 0 6px; font-size: 16px; display: flex; justify-content: space-between; gap: 8px; }
+  .family h3 span { color: var(--muted); font-weight: 500; font-variant-numeric: tabular-nums; }
+  .family ul { margin: 0; padding: 0; list-style: none; color: var(--muted); font-size: 14px; }
+  ol { padding-left: 20px; margin: 0; }
+  ol li { margin: 4px 0; }
+  ol li.done { color: var(--muted); }
+  ol li.done::after { content: " ✓"; color: var(--accent); }
+  ol li.now { font-weight: 600; }
+  footer { margin-top: 48px; padding-top: 16px; border-top: 1px solid var(--border); color: var(--muted); font-size: 14px; }
+  a { color: var(--accent); }
+  .err { color: var(--muted); font-style: italic; }
+</style>
+</head>
+<body>
+<main>
+  <span class="tag">In progress</span>
+  <h1>Explaining Anonymity</h1>
+  <p class="lede">How explainable are the models that detect fake, bot and troll accounts? This site will let you pick a model, see what it relies on, compare that with a known answer key, and watch it face accounts built to fool it.</p>
+
+  <h2>Models</h2>
+  <div id="families" class="families"><p class="err">Loading model list…</p></div>
+
+  <h2>Build progress</h2>
+  <ol>
+    <li class="done">Set up and go live</li>
+    <li class="now">Results for every model</li>
+    <li>Interactive site</li>
+    <li>Attacks on account-stat models</li>
+    <li>Attacks on activity and text models</li>
+    <li>Attacks on graph models (optional)</li>
+    <li>Finishing touches</li>
+  </ol>
+
+  <footer>
+    Final project for Dr Brinnae Bent's Explainable AI course at Duke University ·
+    <a href="https://github.com/ananyafied/Explaining_Anonymity_Website">Source on GitHub</a>
+  </footer>
+</main>
+<script>
+  fetch("data/catalog.json")
+    .then(r => { if (!r.ok) throw new Error(r.status); return r.json(); })
+    .then(cat => {
+      const el = document.getElementById("families");
+      el.innerHTML = "";
+      for (const fam of cat.families) {
+        const models = cat.models.filter(m => m.family === fam.key);
+        const card = document.createElement("div");
+        card.className = "family";
+        const h = document.createElement("h3");
+        h.textContent = fam.name;
+        const n = document.createElement("span");
+        n.textContent = models.length;
+        h.append(n);
+        const ul = document.createElement("ul");
+        for (const m of models) {
+          const li = document.createElement("li");
+          li.textContent = m.name;
+          ul.append(li);
+        }
+        card.append(h, ul);
+        el.append(card);
+      }
+    })
+    .catch(() => {
+      document.getElementById("families").innerHTML = '<p class="err">Model list could not be loaded.</p>';
+    });
+</script>
+</body>
+</html>
