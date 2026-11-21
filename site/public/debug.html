@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Model Results Preview</title>
+<meta name="description" content="Work-in-progress view of the generated results for every model on the Explaining Anonymity site.">
+<style>
+  :root {
+    --bg: #fbfaf7; --surface: #ffffff; --text: #1d1f23; --muted: #5d6470; --border: #e3e0d8;
+    --accent: #0f766e; --accent-soft: #e6f2f0; --good: #0f766e; --good-soft: #e6f2f0;
+    --weak: #b45309; --weak-soft: #fdf1e3; --code: #f3f1ec;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #14161a; --surface: #1c1f24; --text: #e8e6e1; --muted: #9aa1ab; --border: #2c3038;
+      --accent: #4fb8ac; --accent-soft: #1d2d2c; --good: #4fb8ac; --good-soft: #1d2d2c;
+      --weak: #e0a458; --weak-soft: #33281b; --code: #23262c;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  main { max-width: 980px; margin: 0 auto; padding: 32px 16px 64px; }
+  a { color: var(--accent); }
+  .back { font-size: 14px; }
+  h1 { font-size: 28px; margin: 12px 0 4px; }
+  .note { color: var(--muted); margin: 0 0 20px; max-width: 70ch; }
+  .summary { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
+  .pill { font-size: 13px; font-weight: 600; padding: 2px 10px; border-radius: 99px; white-space: nowrap; }
+  .pill.good { color: var(--good); background: var(--good-soft); }
+  .pill.weak { color: var(--weak); background: var(--weak-soft); }
+  .pill.neutral { color: var(--muted); background: var(--code); }
+  details.model { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; margin: 8px 0; }
+  details.model > summary { cursor: pointer; padding: 10px 14px; display: grid; grid-template-columns: 1fr auto auto; gap: 12px; align-items: center; list-style: none; }
+  details.model > summary::-webkit-details-marker { display: none; }
+  .name { font-weight: 600; }
+  .name small { display: block; font-weight: 400; color: var(--muted); font-size: 13px; }
+  .auc { font-variant-numeric: tabular-nums; color: var(--muted); font-size: 14px; white-space: nowrap; }
+  .body { padding: 0 14px 14px; border-top: 1px solid var(--border); }
+  h3 { font-size: 13px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: 16px 0 6px; }
+  ul { margin: 0; padding-left: 20px; }
+  li { margin: 3px 0; }
+  li.pass::marker { content: "✓  "; color: var(--good); }
+  li.fail::marker { content: "✗  "; color: var(--weak); }
+  li.s::marker { content: "+  "; color: var(--good); }
+  li.w::marker { content: "–  "; color: var(--weak); }
+  .because { color: var(--muted); font-size: 13px; }
+  pre { background: var(--code); padding: 10px; border-radius: 8px; overflow-x: auto; font-size: 12px; max-height: 360px; }
+  details.raw > summary { cursor: pointer; color: var(--muted); font-size: 13px; margin-top: 14px; }
+  .family-head { margin: 28px 0 4px; font-size: 18px; }
+  @media (max-width: 560px) {
+    details.model > summary { grid-template-columns: 1fr auto; }
+    .auc { grid-column: 1 / -1; }
+  }
+</style>
+</head>
+<body>
+<main>
+  <a class="back" href="./">← Explaining Anonymity</a>
+  <h1>Model results preview</h1>
+  <p class="note">Work in progress. This page lists the data the site generates for every model on normal (non-adversarial) data: the verdict and its three checks, strengths, weaknesses and the pre-deployment checklist. The interactive site comes next. Rules: <a href="https://github.com/ananyafied/Explaining_Anonymity_Website/blob/main/docs/site_rules.md">docs/site_rules.md</a>.</p>
+  <div id="summary" class="summary"></div>
+  <div id="list"><p class="note">Loading…</p></div>
+</main>
+<script>
+const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
+
+function section(title, items, render) {
+  const frag = document.createDocumentFragment();
+  frag.append(el("h3", null, title));
+  if (!items.length) { frag.append(el("p", "because", "None.")); return frag; }
+  const ul = el("ul");
+  items.forEach(i => ul.append(render(i)));
+  frag.append(ul);
+  return frag;
+}
+
+async function loadModel(key, body) {
+  const r = await fetch(`data/models/${key}.json`);
+  if (!r.ok) throw new Error(r.status);
+  const m = await r.json();
+  body.innerHTML = "";
+  body.append(section("Verdict checks", m.verdict.checks, c => el("li", c.passed ? "pass" : "fail", c.detail)));
+  body.append(section("Strengths", m.strengths, s => el("li", "s", s.text)));
+  body.append(section("Weaknesses", m.weaknesses, w => el("li", "w", w.text)));
+  body.append(section("Pre-deployment checklist", m.checklist, c => {
+    const li = el("li", null, c.text);
+    if (c.because) { li.append(el("br")); li.append(el("span", "because", "Because: " + c.because)); }
+    return li;
+  }));
+  const raw = el("details", "raw");
+  raw.append(el("summary", null, "Raw JSON"));
+  raw.append(el("pre", null, JSON.stringify(m, null, 1)));
+  body.append(raw);
+}
+
+fetch("data/catalog.json").then(r => r.json()).then(cat => {
+  const list = document.getElementById("list");
+  list.innerHTML = "";
+  const good = cat.models.filter(m => m.verdict === "good").length;
+  const s = document.getElementById("summary");
+  s.append(el("span", "pill neutral", `${cat.models.length} models`), el("span", "pill good", `${good} good`), el("span", "pill weak", `${cat.models.length - good} weak`));
+  for (const fam of cat.families) {
+    list.append(el("h2", "family-head", fam.name));
+    for (const m of cat.models.filter(x => x.family === fam.key)) {
+      const d = el("details", "model");
+      const sum = el("summary");
+      const name = el("div", "name", m.name);
+      name.append(el("small", null, `${m.input} · ${m.methods.join(" + ")}`));
+      sum.append(name, el("span", "auc", `test AUC ${m.test_auc.toFixed(3)}`), el("span", `pill ${m.verdict}`, m.verdict));
+      const body = el("div", "body", "Loading…");
+      d.append(sum, body);
+      d.addEventListener("toggle", () => {
+        if (d.open && !d.dataset.loaded) {
+          d.dataset.loaded = "1";
+          loadModel(m.key, body).catch(() => { body.textContent = "Could not load this model's data."; });
+        }
+      });
+      list.append(d);
+    }
+  }
+}).catch(() => { document.getElementById("list").innerHTML = '<p class="note">Model list could not be loaded.</p>'; });
+</script>
+</body>
+</html>
