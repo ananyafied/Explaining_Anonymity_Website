@@ -1,0 +1,56 @@
+{
+ "seed": 0,
+ "n_per_kind": 50,
+ "ig_steps": 64,
+ "gshap_samples": 20,
+ "gshap_baselines": 30,
+ "gshap_stdev": 0.05,
+ "z0": -0.34714251384512074,
+ "explained_attack": "activity_combined",
+ "methods": {
+  "cnn1d": [
+   "Grad-CAM",
+   "Integrated Gradients"
+  ],
+  "rnn": [
+   "Integrated Gradients",
+   "GradientSHAP"
+  ],
+  "lstm": [
+   "Integrated Gradients",
+   "GradientSHAP"
+  ],
+  "autoencoder_lstm": [
+   "Integrated Gradients",
+   "GradientSHAP"
+  ]
+ },
+ "adversarial_seed": 1,
+ "evaluation_split": "test",
+ "seconds_per_explanation": {
+  "cnn1d/Grad-CAM/none": 0.0002193737030029297,
+  "cnn1d/Integrated Gradients/none": 0.0047161277135213215,
+  "rnn/Integrated Gradients/none": 0.003909260431925456,
+  "rnn/GradientSHAP/none": 0.0005906995137532552,
+  "lstm/Integrated Gradients/none": 0.011364086469014486,
+  "lstm/GradientSHAP/none": 0.002079188028971354,
+  "autoencoder_lstm/Integrated Gradients/none": 0.023289144833882648,
+  "autoencoder_lstm/GradientSHAP/none": 0.003813440004984538,
+  "cnn1d/Grad-CAM/mild": 5.38333257039388e-05,
+  "cnn1d/Integrated Gradients/mild": 0.005153748194376627,
+  "rnn/Integrated Gradients/mild": 0.004261666933695475,
+  "rnn/GradientSHAP/mild": 0.0005831797917683919,
+  "lstm/Integrated Gradients/mild": 0.01215818723042806,
+  "lstm/GradientSHAP/mild": 0.0016774145762125652,
+  "autoencoder_lstm/Integrated Gradients/mild": 0.02572644074757894,
+  "autoencoder_lstm/GradientSHAP/mild": 0.003409614562988281,
+  "cnn1d/Grad-CAM/strong": 7.80789057413737e-05,
+  "cnn1d/Integrated Gradients/strong": 0.005329720179239909,
+  "rnn/Integrated Gradients/strong": 0.004369200070699056,
+  "rnn/GradientSHAP/strong": 0.0006620407104492188,
+  "lstm/Integrated Gradients/strong": 0.012040467262268066,
+  "lstm/GradientSHAP/strong": 0.0016579675674438478,
+  "autoencoder_lstm/Integrated Gradients/strong": 0.025585947036743165,
+  "autoencoder_lstm/GradientSHAP/strong": 0.0034956725438435874
+ }
+}

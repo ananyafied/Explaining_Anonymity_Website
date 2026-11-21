@@ -19,8 +19,8 @@ const ROLE_TAG = {
 const roleTag = (role) => role.startsWith("interaction") ? "interaction" : role.startsWith("redundant_proxy") ? "near-copy" : ROLE_TAG[role];
 const ATTACK_PHASE = {
   tabular: "Attack results are being generated.",
-  sequences: "Coming soon: these models will face bots and trolls that post at human volume and rhythm.",
-  text: "Coming soon: these models will face posts with disguised marker words and no #trending.",
+  sequences: "Attack results are being generated.",
+  text: "Attack results are being generated.",
   graph: "Planned (optional phase): graph attacks need new accounts wired into the network.",
   multimodal: "Planned (optional phase): this model will face the combined attacks.",
 };
@@ -181,8 +181,8 @@ function attackSection(m) {
   const tiles = el("div", { class: "tiles" });
   const impBox = el("div"), singleBox = el("div");
 
-  const feats = Object.keys(A.importance.SHAP.none).sort((a, b) => A.importance.SHAP.none[b] - A.importance.SHAP.none[a]);
   const singles = Object.keys(A.attacks).filter((k) => k !== A.combined);
+  const exKind = { value: "bot" };
 
   const render = () => {
     const lvl = LEVELS[Number(slider.value)];
@@ -193,11 +193,7 @@ function attackSection(m) {
       tile("Fakes caught", pct(r.caught), lvl === "none" ? "at the model's own decision threshold" : delta(base.caught, r.caught, pctPts)),
       tile("Real users flagged", pct(r.flagged_real), "real users never change, so neither does this"));
 
-    const rows = feats.map((f) => ({ label: f, values: { SHAP: A.importance.SHAP[lvl][f], LIME: A.importance.LIME[lvl][f] }, truth: A.importance.SHAP.none[f] }));
-    impBox.replaceChildren(
-      legend([{ label: "SHAP", color: S1 }, { label: "LIME", color: S2 }, { label: "SHAP with no attack", kind: "tick" }]),
-      hbars({ rows, series: [{ key: "SHAP", name: `SHAP (${LABEL[lvl].toLowerCase()})`, color: S1 }, { key: "LIME", name: `LIME (${LABEL[lvl].toLowerCase()})`, color: S2 }], truthName: "SHAP, no attack" }),
-      tableView(["Feature", `SHAP (${LABEL[lvl]})`, `LIME (${LABEL[lvl]})`, "SHAP (None)"], rows.map((x) => [x.label, pct(x.values.SHAP, 1), pct(x.values.LIME, 1), pct(x.truth, 1)])));
+    impBox.replaceChildren(...attackImportance(m, A, lvl, LABEL, exKind));
 
     if (lvl === "none") {
       // with no attack every bar would equal the no-attack AUC, so there is nothing to compare
@@ -220,19 +216,83 @@ function attackSection(m) {
     : el("p", { class: "note", text: "None found." });
 
   return section("attack", "Under attack",
-    `Bots and trolls copy real users' habits (mimicry). Tested on a fresh population the model has never seen (${A.n} test accounts, ${A.n_fake} of them fake), with #trending removed everywhere. Real users are never changed.`,
+    `${ATTACK_LEAD[m.family]} Tested on a fresh population the model has never seen (${A.n} test accounts, ${A.n_fake} of them fake), with #trending removed everywhere. Real users are never changed.`,
     card(el("h3", { text: `${A.attacks[A.combined].name}` }),
-      el("p", { class: "note", style: { marginTop: 0 }, text: `${A.attacks[A.combined].how} Changes: ${A.attacks[A.combined].changes.join(", ")}. Mild moves each feature halfway to a real user's value; strong copies it.` }),
+      el("p", { class: "note", style: { marginTop: 0 }, text: `${A.attacks[A.combined].how} ${STRENGTH_NOTE[m.family]}` }),
       el("div", { class: "strength-wrap" }, el("label", { for: "attack-strength", text: "Attack strength" }), slider, sliderLabels),
       tiles),
-    card(el("h3", { text: "What it relies on under this attack" }),
-      el("p", { class: "note", style: { marginTop: 0 }, text: "Share of credit per feature for 50 humans, 50 bots and 50 trolls from the attacked population, at the strength chosen above." }), impBox),
+    card(el("h3", { text: ATTACK_IMP_TITLE[m.family] }), impBox),
     card(el("h3", { text: "Which change hurts it most?" }), singleBox),
     el("div", { class: "two-col", style: { marginTop: "12px" } },
       el("div", { class: "card strengths" }, el("h3", { text: `Holds up (${A.strengths.length})` }), list(A.strengths, "+")),
       el("div", { class: "card weaknesses" }, el("h3", { text: `Vulnerabilities (${A.weaknesses.length})` }), list(A.weaknesses, "–"))),
     A.checklist.length ? card(el("h3", { text: "Attack tests to run before deploying" }),
       el("ol", { class: "checklist" }, A.checklist.map((c) => el("li", {}, c.text, el("span", { class: "because", text: `Because: ${c.because}` }))))) : null);
+}
+
+const ATTACK_LEAD = {
+  tabular: "Bots and trolls copy real users' account stats (mimicry).",
+  sequences: "Bots and trolls disguise when and how much they post.",
+  text: "Bots and trolls disguise the words that give them away.",
+};
+const STRENGTH_NOTE = {
+  tabular: "Mild moves each stat halfway to a real user's value; strong copies it.",
+  sequences: "Mild applies each change halfway (half the bursts moved, half the gap to a real user's volume closed); strong applies it fully.",
+  text: "Mild disguises or swaps each giveaway word with a 50% chance and pads posts by half their length; strong changes every giveaway word and doubles their length.",
+};
+
+// ------------------------------------------------------------------ importance under attack (per family)
+const ATTACK_IMP_TITLE = {
+  tabular: "What it relies on under this attack",
+  sequences: "Does the credit still land on the planted hours?",
+  text: "Does the credit still land on the giveaway words?",
+};
+
+function attackImportance(m, A, lvl, LABEL, exKind) {
+  const lv = LABEL[lvl].toLowerCase();
+  if (m.family === "tabular") {
+    const feats = Object.keys(A.importance.SHAP.none).sort((a, b) => A.importance.SHAP.none[b] - A.importance.SHAP.none[a]);
+    const rows = feats.map((f) => ({ label: f, values: { SHAP: A.importance.SHAP[lvl][f], LIME: A.importance.LIME[lvl][f] }, truth: A.importance.SHAP.none[f] }));
+    return [
+      el("p", { class: "note", style: { marginTop: 0 }, text: "Share of credit per feature for 50 humans, 50 bots and 50 trolls from the attacked population, at the strength chosen above." }),
+      legend([{ label: "SHAP", color: S1 }, { label: "LIME", color: S2 }, { label: "SHAP with no attack", kind: "tick" }]),
+      hbars({ rows, series: [{ key: "SHAP", name: `SHAP (${lv})`, color: S1 }, { key: "LIME", name: `LIME (${lv})`, color: S2 }], truthName: "SHAP, no attack" }),
+      tableView(["Feature", `SHAP (${LABEL[lvl]})`, `LIME (${LABEL[lvl]})`, "SHAP (None)"], rows.map((x) => [x.label, pct(x.values.SHAP, 1), pct(x.values.LIME, 1), pct(x.truth, 1)]))];
+  }
+  const sc = A.signal_credit, [M1, M2] = m.methods, colours = { [M1]: S1, [M2]: S2 };
+  const rows = m.methods.map((meth) => ({ label: meth, values: { v: sc[meth][lvl] }, truth: sc[meth].none }));
+  const signalChart = [
+    legend([{ label: `Credit on the planted signal (${lv})`, color: S1 }, { label: "With no attack", kind: "tick" }]),
+    hbars({ rows, series: [{ key: "v", name: `Share of credit (${lv})`, color: S1 }], truthName: "No attack", max: 1 })];
+  if (m.family === "sequences") {
+    const share = sc._planted_hour_share[lvl];
+    const box = el("div");
+    const draw = (kind) => {
+      exKind.value = kind;
+      const ex = A.examples[kind], e = ex[lvl];
+      box.replaceChildren(
+        el("p", { class: "meta", text: `Account ${ex.account_id} (${kind}), ${lv === "none" ? "unattacked" : `${lv} attack`}` }),
+        legend([{ label: "Posts", color: "var(--muted)" }, { label: "Planted hours (moved with the attack)", kind: "wash" }, { label: M1, color: S1, kind: "line" }, { label: M2, color: S2, kind: "line" }]),
+        hourChart({ counts: e.counts, planted: e.planted, series: m.methods.map((meth) => ({ name: meth, color: colours[meth], values: e.attributions[meth] })) }));
+    };
+    draw(exKind.value);
+    return [
+      el("p", { class: "note", style: { marginTop: 0 }, text: `Share of each method's credit on the hours that carry the bots' and trolls' planted pattern (${pct(share)} of their week at this strength), for 50 bots and 50 trolls.` }),
+      ...signalChart,
+      el("h3", { style: { fontSize: "15px", marginTop: "16px" }, text: "One attacked week" }),
+      segTabs([{ key: "bot", label: "Bot" }, { key: "troll", label: "Troll" }], exKind.value, draw), box];
+  }
+  // text
+  const ex = A.examples[lvl];
+  const wrows = ex.words.map((w, j) => ({ label: w, tags: ex.is_marker_slot[j] ? [m.view.markers.includes(w) ? "marker" : "replaced marker"] : [], cells: { [M1]: ex.attributions[M1][j], [M2]: ex.attributions[M2][j] } }));
+  return [
+    el("p", { class: "note", style: { marginTop: 0 }, text: "Share of each method's credit on the giveaway word (or its disguise or synonym) in 60 posts by fake accounts." }),
+    ...signalChart,
+    el("h3", { style: { fontSize: "15px", marginTop: "16px" }, text: "One attacked post" }),
+    el("p", { class: "meta", text: `Original: "${ex.original_text}"` }),
+    signedTable({ rows: wrows, cols: [{ key: M1, name: M1, color: S1 }, { key: M2, name: M2, color: S2 }], firstHeader: "Word" }),
+    el("p", { class: "note", text: "Bars to the right push toward 'fake'. The tagged word is the giveaway word, or what the attack turned it into." +
+      (m.key === "transformer" ? " The transformer reads only the first 14 words of a post, so words beyond that (common once posts are padded) have no effect: in this post SHAP rightly gives them nothing, while LIME still credits some of them." : "") })];
 }
 
 // ------------------------------------------------------------------ family views

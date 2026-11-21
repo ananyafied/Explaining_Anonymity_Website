@@ -1,0 +1,30 @@
+{
+ "seed": 0,
+ "n_posts": 60,
+ "shap_nsamples": 1000,
+ "lime_nsamples": 1000,
+ "explained_attack": "text_combined",
+ "transformer_max_words": 14,
+ "adversarial_seed": 1,
+ "evaluation_split": "test",
+ "seconds_per_explanation": {
+  "transformer/SHAP/none": 0.02620938221613566,
+  "transformer/LIME/none": 0.07553414901097616,
+  "doc2vec_logreg/SHAP/none": 0.1158961017926534,
+  "doc2vec_logreg/LIME/none": 0.3467271049817403,
+  "word2vec_logreg/SHAP/none": 0.009157868226369222,
+  "word2vec_logreg/LIME/none": 0.024477700392405193,
+  "transformer/SHAP/mild": 0.03783191839853923,
+  "transformer/LIME/mild": 0.07678065299987794,
+  "doc2vec_logreg/SHAP/mild": 0.17369470596313477,
+  "doc2vec_logreg/LIME/mild": 0.36372073491414386,
+  "word2vec_logreg/SHAP/mild": 0.018145732084910073,
+  "word2vec_logreg/LIME/mild": 0.028149731953938804,
+  "transformer/SHAP/strong": 0.044647415479024254,
+  "transformer/LIME/strong": 0.09416628281275431,
+  "doc2vec_logreg/SHAP/strong": 0.1969017465909322,
+  "doc2vec_logreg/LIME/strong": 0.3824925621350606,
+  "word2vec_logreg/SHAP/strong": 0.016917713483174644,
+  "word2vec_logreg/LIME/strong": 0.032357430458068846
+ }
+}

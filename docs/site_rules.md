@@ -117,13 +117,18 @@ are comparable.
 | `single_attack_drop` | 0.1 | Under attack: AUC lost to one change (strong) that counts as "one change is enough" |
 | `importance_shift` | 0.25 | Under attack: share of SHAP credit that moves between no attack and strong |
 | `flagged_real_high` | 0.5 | Under attack: share of real users the model's own threshold flags, above which "fakes caught" means little |
+| `caught_low` | 0.5 | Under attack: share of fakes the model's threshold catches with no attack, below which the threshold is out of date |
+| `inverted_auc` | 0.4 | Under attack: strong combined attack AUC below which fakes look more genuine than real users |
+| `trap_gain` | 0.03 | Under attack (text): AUC gained on fresh posts without `#trending`, compared with the original test set |
 
 ## 4. Under attack (adversarial dataset)
 
 Each model with adversarial results gets its own list, from
-[`adversarial/`](../adversarial/README.md): bots and trolls copy real users' habits ("mimicry") at
-mild or strong strength, one feature at a time or all cheap and moderate ones together (the
-**combined** attack). AUC drops are measured against the same fresh population with no attack.
+[`adversarial/`](../adversarial/README.md): bots and trolls disguise themselves at mild or strong
+strength, one change at a time or all together (the **combined** attack). Account stats copy real
+users' values; hourly activity has its bursts moved, spread out, re-timed or thinned to a real
+user's volume; posts have their marker words disguised or swapped and are padded with ordinary
+words. AUC drops are measured against the same fresh population with no attack.
 
 - *Barely better than guessing even before the attack* (weakness): AUC on the fresh, unattacked population below `near_chance_auc`. Replaces the three rules below and the two "single change" strengths, since such a model has little to lose.
 - *Collapses* (weakness): the strong combined attack costs at least `attack_collapse` AUC.
@@ -131,8 +136,12 @@ mild or strong strength, one feature at a time or all cheap and moderate ones to
 - *One cheap change is enough* (weakness): a single cheap attack at strong strength costs at least `single_attack_drop` AUC.
 - *Only an expensive change hurts much* (strength): no cheap attack reaches `single_attack_drop`, but buying aged accounts does.
 - *No single change hurts much* (strength): no single attack reaches `single_attack_drop`.
+- *Only volume matters to it* (weakness, hourly activity): moving bursts and faking a daily rhythm each cost less than `timing_drop` AUC, while matching a real user's weekly volume costs at least `single_attack_drop`.
 - *Its most important features are cheap to fake* (weakness): at least two of SHAP's top three features (no attack) are ones a cheap attack changes.
 - *A half-hearted attack fools it more than a full one* (weakness): the mild combined attack pushes AUC below 0.5 and below the strong attack's AUC. Fakes moved halfway toward real users are more typical than real users, which fools detectors of unusual accounts.
+- *Its threshold is out of date* (weakness): with no attack, the model's own threshold catches fewer than `caught_low` of fakes (not shown when the threshold already flags most real users).
+- *Better once #trending is gone* (strength, text): AUC on the fresh, unattacked population is at least `trap_gain` above the original test AUC.
+- *The attack turns it upside down* (weakness): the strong combined attack pushes AUC below `inverted_auc`, so disguised fakes score as more genuine than real users.
 - *Its threshold flags most real users* (weakness): the model's own decision threshold (from step 1) flags at least `flagged_real_high` of real users, so "fakes caught" is not informative.
 - *Explanations change visibly under attack* (strength): at least `importance_shift` of SHAP's credit moves between no attack and the strong combined attack, so monitoring explanations could flag it.
 - *Explanations barely change while it fails* (weakness): less than that moves, although the model collapses.

@@ -33,6 +33,8 @@ python -m anonsynth --n-accounts 5000 --seed 0 --out data/synthetic
 python site/build/verify_models.py     # expect 26/26
 python -m adversarial                  # adversarial population (needed only to re-run the attacks)
 python -m adversarial.evaluate_tabular # ~10 minutes: scores and explains the 11 account-stat models under attack
+python -m adversarial.evaluate_sequences # ~2 minutes: the 4 hourly-activity models
+python -m adversarial.evaluate_text    # the 3 text models
 python site/build/build_models.py      # also rebuilds catalog.json; no models are loaded
 ```
 
