@@ -1,0 +1,448 @@
+{
+ "families": [
+  {
+   "key": "tabular",
+   "name": "Account stats"
+  },
+  {
+   "key": "sequences",
+   "name": "Hourly activity"
+  },
+  {
+   "key": "text",
+   "name": "Post text"
+  },
+  {
+   "key": "graph",
+   "name": "Follower graph"
+  },
+  {
+   "key": "multimodal",
+   "name": "Multimodal"
+  }
+ ],
+ "models": [
+  {
+   "key": "lightgbm",
+   "name": "LightGBM",
+   "family": "tabular",
+   "kind": "classifier",
+   "input": "12 profile stats (raw)",
+   "methods": [
+    "SHAP",
+    "LIME"
+   ],
+   "aliases": [
+    "lgbm",
+    "light gbm",
+    "gradient boosting"
+   ],
+   "test_auc": 0.8426
+  },
+  {
+   "key": "xgboost",
+   "name": "XGBoost",
+   "family": "tabular",
+   "kind": "classifier",
+   "input": "12 profile stats (raw)",
+   "methods": [
+    "SHAP",
+    "LIME"
+   ],
+   "aliases": [
+    "xgb",
+    "boosted trees"
+   ],
+   "test_auc": 0.8438
+  },
+  {
+   "key": "rf",
+   "name": "Random forest",
+   "family": "tabular",
+   "kind": "classifier",
+   "input": "12 profile stats (raw)",
+   "methods": [
+    "SHAP",
+    "LIME"
+   ],
+   "aliases": [
+    "rf",
+    "random forest",
+    "forest"
+   ],
+   "test_auc": 0.829
+  },
+  {
+   "key": "svm_linear",
+   "name": "Linear SVM",
+   "family": "tabular",
+   "kind": "classifier",
+   "input": "12 profile stats (standardised in pipeline)",
+   "methods": [
+    "SHAP",
+    "LIME"
+   ],
+   "aliases": [
+    "linear svm",
+    "linear svc"
+   ],
+   "test_auc": 0.822
+  },
+  {
+   "key": "svm_rbf",
+   "name": "RBF SVM",
+   "family": "tabular",
+   "kind": "classifier",
+   "input": "12 profile stats (standardised in pipeline)",
+   "methods": [
+    "SHAP",
+    "LIME"
+   ],
+   "aliases": [
+    "rbf svm",
+    "kernel svm",
+    "rbf"
+   ],
+   "test_auc": 0.8225
+  },
+  {
+   "key": "nmf_logreg",
+   "name": "NMF + logistic regression",
+   "family": "tabular",
+   "kind": "classifier",
+   "input": "12 profile stats",
+   "methods": [
+    "SHAP",
+    "LIME"
+   ],
+   "aliases": [
+    "nmf",
+    "nmf logreg"
+   ],
+   "test_auc": 0.7723
+  },
+  {
+   "key": "pca_logreg",
+   "name": "PCA + logistic regression",
+   "family": "tabular",
+   "kind": "classifier",
+   "input": "12 profile stats",
+   "methods": [
+    "SHAP",
+    "LIME"
+   ],
+   "aliases": [
+    "pca",
+    "pca logreg"
+   ],
+   "test_auc": 0.761
+  },
+  {
+   "key": "isolation_forest",
+   "name": "Isolation forest",
+   "family": "tabular",
+   "kind": "anomaly",
+   "input": "12 profile stats (standardised with train statistics)",
+   "methods": [
+    "SHAP",
+    "LIME"
+   ],
+   "aliases": [
+    "iforest",
+    "isolation forest"
+   ],
+   "test_auc": 0.6385
+  },
+  {
+   "key": "lof",
+   "name": "Local outlier factor",
+   "family": "tabular",
+   "kind": "anomaly",
+   "input": "12 profile stats (standardised with train statistics)",
+   "methods": [
+    "SHAP",
+    "LIME"
+   ],
+   "aliases": [
+    "lof",
+    "local outlier factor"
+   ],
+   "test_auc": 0.6009
+  },
+  {
+   "key": "one_class_svm",
+   "name": "One-class SVM",
+   "family": "tabular",
+   "kind": "anomaly",
+   "input": "12 profile stats (standardised with train statistics)",
+   "methods": [
+    "SHAP",
+    "LIME"
+   ],
+   "aliases": [
+    "ocsvm",
+    "one class svm",
+    "one-class svm"
+   ],
+   "test_auc": 0.5916
+  },
+  {
+   "key": "autoencoder_dense",
+   "name": "Dense autoencoder",
+   "family": "tabular",
+   "kind": "anomaly",
+   "input": "12 standardised profile stats",
+   "methods": [
+    "SHAP",
+    "LIME"
+   ],
+   "aliases": [
+    "autoencoder",
+    "dense autoencoder",
+    "ae"
+   ],
+   "test_auc": 0.5497
+  },
+  {
+   "key": "cnn1d",
+   "name": "1D CNN",
+   "family": "sequences",
+   "kind": "classifier",
+   "input": "168 hourly post counts (log1p, standardised)",
+   "methods": [
+    "Grad-CAM",
+    "Integrated Gradients"
+   ],
+   "aliases": [
+    "cnn",
+    "1d cnn",
+    "convolutional"
+   ],
+   "test_auc": 0.9996
+  },
+  {
+   "key": "lstm",
+   "name": "LSTM",
+   "family": "sequences",
+   "kind": "classifier",
+   "input": "168 hourly post counts (log1p, standardised)",
+   "methods": [
+    "Integrated Gradients",
+    "GradientSHAP"
+   ],
+   "aliases": [
+    "lstm"
+   ],
+   "test_auc": 0.9997
+  },
+  {
+   "key": "rnn",
+   "name": "RNN",
+   "family": "sequences",
+   "kind": "classifier",
+   "input": "168 hourly post counts (log1p, standardised)",
+   "methods": [
+    "Integrated Gradients",
+    "GradientSHAP"
+   ],
+   "aliases": [
+    "rnn",
+    "recurrent"
+   ],
+   "test_auc": 0.8862
+  },
+  {
+   "key": "autoencoder_lstm",
+   "name": "LSTM autoencoder",
+   "family": "sequences",
+   "kind": "anomaly",
+   "input": "168 hourly post counts (log1p, standardised)",
+   "methods": [
+    "Integrated Gradients",
+    "GradientSHAP"
+   ],
+   "aliases": [
+    "lstm autoencoder",
+    "lstm ae"
+   ],
+   "test_auc": 0.9878
+  },
+  {
+   "key": "transformer",
+   "name": "Transformer",
+   "family": "text",
+   "kind": "classifier",
+   "input": "post text (whitespace tokens, vocabulary from train)",
+   "methods": [
+    "SHAP",
+    "LIME"
+   ],
+   "aliases": [
+    "transformer"
+   ],
+   "test_auc": 0.8727
+  },
+  {
+   "key": "doc2vec_logreg",
+   "name": "Doc2vec + logistic regression",
+   "family": "text",
+   "kind": "classifier",
+   "input": "post text -> doc2vec vector per account (val/test inferred)",
+   "methods": [
+    "SHAP",
+    "LIME"
+   ],
+   "aliases": [
+    "doc2vec"
+   ],
+   "test_auc": 0.855
+  },
+  {
+   "key": "word2vec_logreg",
+   "name": "Word2vec + logistic regression",
+   "family": "text",
+   "kind": "classifier",
+   "input": "post text -> mean word2vec vector per account",
+   "methods": [
+    "SHAP",
+    "LIME"
+   ],
+   "aliases": [
+    "word2vec",
+    "w2v"
+   ],
+   "test_auc": 0.7222
+  },
+  {
+   "key": "gcn",
+   "name": "GCN",
+   "family": "graph",
+   "kind": "classifier",
+   "input": "12 standardised profile stats as node features + undirected interaction graph",
+   "methods": [
+    "GNNExplainer",
+    "Integrated Gradients"
+   ],
+   "aliases": [
+    "gcn",
+    "graph convolutional network"
+   ],
+   "test_auc": 0.9645
+  },
+  {
+   "key": "gat",
+   "name": "GAT",
+   "family": "graph",
+   "kind": "classifier",
+   "input": "12 standardised profile stats as node features + undirected interaction graph",
+   "methods": [
+    "GNNExplainer",
+    "Integrated Gradients"
+   ],
+   "aliases": [
+    "gat",
+    "graph attention"
+   ],
+   "test_auc": 0.9485
+  },
+  {
+   "key": "graphsage",
+   "name": "GraphSAGE",
+   "family": "graph",
+   "kind": "classifier",
+   "input": "12 standardised profile stats as node features + undirected interaction graph",
+   "methods": [
+    "GNNExplainer",
+    "Integrated Gradients"
+   ],
+   "aliases": [
+    "sage",
+    "graph sage"
+   ],
+   "test_auc": 0.9324
+  },
+  {
+   "key": "rgcn",
+   "name": "R-GCN",
+   "family": "graph",
+   "kind": "classifier",
+   "input": "12 standardised profile stats as node features + undirected interaction graph",
+   "methods": [
+    "GNNExplainer",
+    "Integrated Gradients"
+   ],
+   "aliases": [
+    "rgcn",
+    "relational gcn"
+   ],
+   "test_auc": 0.9341
+  },
+  {
+   "key": "node2vec_logreg",
+   "name": "Node2vec + logistic regression",
+   "family": "graph",
+   "kind": "classifier",
+   "input": "interaction graph -> random-walk embedding per account",
+   "methods": [
+    "SHAP",
+    "LIME"
+   ],
+   "aliases": [
+    "node2vec"
+   ],
+   "test_auc": 0.5906
+  },
+  {
+   "key": "deepwalk_logreg",
+   "name": "DeepWalk + logistic regression",
+   "family": "graph",
+   "kind": "classifier",
+   "input": "interaction graph -> random-walk embedding per account",
+   "methods": [
+    "SHAP",
+    "LIME"
+   ],
+   "aliases": [
+    "deepwalk",
+    "deep walk"
+   ],
+   "test_auc": 0.6322
+  },
+  {
+   "key": "label_spreading",
+   "name": "Label spreading",
+   "family": "graph",
+   "kind": "propagation",
+   "input": "interaction graph + a few known labels",
+   "methods": [
+    "Seed contribution",
+    "Leave-one-seed-out"
+   ],
+   "aliases": [
+    "label propagation"
+   ],
+   "test_auc": 0.4995
+  },
+  {
+   "key": "multimodal_fusion",
+   "name": "Multimodal fusion",
+   "family": "multimodal",
+   "kind": "classifier",
+   "input": "text embedding (frozen transformer) + 12 profile stats + interaction graph",
+   "methods": [
+    "Block Shapley",
+    "Drop-one ablation"
+   ],
+   "aliases": [
+    "fusion",
+    "multimodal"
+   ],
+   "test_auc": 0.9484
+  }
+ ],
+ "excluded": {
+  "belief_propagation": "Scores are inverted (test AUC 0.10).",
+  "svd_logreg": "Identical to PCA + logistic regression.",
+  "baseline_all_authentic": "Reference baseline, not a model."
+ }
+}
