@@ -151,3 +151,57 @@ def test_docs_list_every_threshold_with_its_value():
         assert f"`{name}`" in doc, f"{name} missing from docs/site_rules.md"
         row = next(line for line in doc.splitlines() if line.startswith(f"| `{name}` |"))
         assert f"{value:g}" in row, f"{name}: docs do not show the current value {value}"
+
+
+# ------------------------------------------------------------------ under attack
+def attack_facts(none=0.85, comb_strong=0.55, comb_mild=0.70, single=None, shap_none=None, shap_strong=None):
+    atk = {k: {"name": k.title(), "cost": c, "changes": [f]} for k, c, f in [
+        ("posting_rate", "cheap", "posts_per_day"), ("replies", "cheap", "reply_fraction"),
+        ("account_age", "expensive", "account_age_days"), ("combined", "moderate", "posts_per_day")]}
+    single = single or {"posting_rate": 0.80, "replies": 0.82, "account_age": 0.84}
+    res = {"none": {"auc": none, "caught": 0.7, "flagged_real": 0.2}, "combined": {"mild": {"auc": comb_mild, "caught": 0.5}, "strong": {"auc": comb_strong, "caught": 0.2}}}
+    for k, v in single.items():
+        res[k] = {"mild": {"auc": (none + v) / 2, "caught": 0.6}, "strong": {"auc": v, "caught": 0.5}}
+    shap_none = shap_none or {"posts_per_day": 0.4, "reply_fraction": 0.3, "account_age_days": 0.2, "noise_1": 0.1}
+    shap_strong = shap_strong or {"posts_per_day": 0.1, "reply_fraction": 0.1, "account_age_days": 0.5, "noise_1": 0.3}
+    return {"results": res, "attacks": atk, "combined": "combined", "importance": {"SHAP": {"none": shap_none, "strong": shap_strong}}}
+
+
+def test_attack_collapse_holds_and_hurts():
+    assert "attack_collapses" in ids(R.attack_findings(attack_facts(comb_strong=0.85 - T["attack_collapse"])))
+    assert "attack_holds" in ids(R.attack_findings(attack_facts(comb_strong=0.85 - T["attack_holds"] + 0.001)))
+    assert "attack_hurts" in ids(R.attack_findings(attack_facts(comb_strong=0.75)))
+
+
+def test_single_attack_rules():
+    got = ids(R.attack_findings(attack_facts(single={"posting_rate": 0.70, "replies": 0.84, "account_age": 0.84})))
+    assert "one_cheap_change" in got
+    got = ids(R.attack_findings(attack_facts(single={"posting_rate": 0.82, "replies": 0.82, "account_age": 0.60})))
+    assert "only_expensive_hurts" in got and "one_cheap_change" not in got
+    got = ids(R.attack_findings(attack_facts(single={"posting_rate": 0.82, "replies": 0.82, "account_age": 0.82})))
+    assert "no_single_change" in got
+
+
+def test_cheap_top_features_and_explanation_shift():
+    got = ids(R.attack_findings(attack_facts()))
+    assert "cheap_top_features" in got and "explanations_reveal_attack" in got
+    same = {"posts_per_day": 0.4, "reply_fraction": 0.3, "account_age_days": 0.2, "noise_1": 0.1}
+    got = ids(R.attack_findings(attack_facts(shap_strong=same)))
+    assert "explanations_hide_attack" in got
+
+
+def test_attack_checklist_items_explain_themselves():
+    found = R.attack_findings(attack_facts(single={"posting_rate": 0.70, "replies": 0.84, "account_age": 0.84}))
+    cl = R.attack_checklist(found)
+    assert cl and all(c["because"] and c["id"].startswith("a_") for c in cl)
+    src = inspect.getsource(R)
+    emitted = set(re.findall(r'_finding\((?:W|kind), "([a-z_]+)"', src))
+    assert set(R.ATTACK_CHECKLIST) <= emitted
+
+
+def test_anomaly_style_attack_rules():
+    f = attack_facts(none=0.58, comb_mild=0.42, comb_strong=0.52)
+    f["results"]["none"]["flagged_real"] = 0.9
+    got = ids(R.attack_findings(f))
+    assert {"flags_everyone", "too_typical", "nothing_to_lose"} <= set(got)
+    assert not {"attack_holds", "attack_hurts", "attack_collapses", "no_single_change", "only_expensive_hurts"} & set(got)

@@ -7,7 +7,8 @@ This repository builds on [Explaining_Anonymity](https://github.com/ananyafied/E
 1. **Synthetic data with known ground truth** (done): `anonsynth/`, documented in [docs/synthetic_data.md](docs/synthetic_data.md)
 2. **Model fitting** (done): fitted models and results in `outputs/step1_fit/`. The fitting notebook (`01_fit_models.ipynb`) is not included here; the model definitions it used are copied in `xai_eval/step1_models.py`.
 3. **Explainability evaluation** (done): plan in [docs/step2_plan.md](docs/step2_plan.md), notebooks `notebooks/02` to `07`, shared code in `xai_eval/`, results in `outputs/step2_explain/`
-4. **Website** (in progress): `site/`, with an adversarial dataset in `adversarial/`
+4. **Website** (in progress): `site/`, live at https://ananyafied.github.io/Explaining_Anonymity_Website/
+5. **Adversarial dataset** (account stats done; activity and text next): `adversarial/`, design in [adversarial/README.md](adversarial/README.md), results in `outputs/step3_adversarial/`
 
 ## Quick start
 ```bash

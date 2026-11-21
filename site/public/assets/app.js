@@ -18,7 +18,7 @@ const ROLE_TAG = {
 };
 const roleTag = (role) => role.startsWith("interaction") ? "interaction" : role.startsWith("redundant_proxy") ? "near-copy" : ROLE_TAG[role];
 const ATTACK_PHASE = {
-  tabular: "Coming next: these models will face bots and trolls that fake human-looking account stats.",
+  tabular: "Attack results are being generated.",
   sequences: "Coming soon: these models will face bots and trolls that post at human volume and rhythm.",
   text: "Coming soon: these models will face posts with disguised marker words and no #trending.",
   graph: "Planned (optional phase): graph attacks need new accounts wired into the network.",
@@ -167,7 +167,68 @@ function checklistSection(m) {
 }
 
 function attackSection(m) {
-  return section("attack", "Under attack", null, card(el("p", { class: "coming", style: { margin: 0 }, text: ATTACK_PHASE[m.family] })));
+  const A = m.attack;
+  if (!A) return section("attack", "Under attack", null, card(el("p", { class: "coming", style: { margin: 0 }, text: ATTACK_PHASE[m.family] })));
+  const LEVELS = ["none", "mild", "strong"], LABEL = { none: "None", mild: "Mild", strong: "Strong" };
+  const base = A.results.none, comb = A.results[A.combined];
+  const at = (res, lvl) => (lvl === "none" ? base : res[lvl]);
+  const delta = (x, y, f) => { const d = y - x; return `${d >= 0 ? "+" : "−"}${f(Math.abs(d))} vs no attack`; };
+  const pctPts = (x) => `${(100 * x).toFixed(0)} pts`;
+
+  // --- slider
+  const slider = el("input", { type: "range", min: 0, max: 2, step: 1, value: 2, id: "attack-strength", "aria-label": "Attack strength", class: "strength" });
+  const sliderLabels = el("div", { class: "strength-labels", "aria-hidden": "true" }, LEVELS.map((l) => el("span", { text: LABEL[l] })));
+  const tiles = el("div", { class: "tiles" });
+  const impBox = el("div"), singleBox = el("div");
+
+  const feats = Object.keys(A.importance.SHAP.none).sort((a, b) => A.importance.SHAP.none[b] - A.importance.SHAP.none[a]);
+  const singles = Object.keys(A.attacks).filter((k) => k !== A.combined);
+
+  const render = () => {
+    const lvl = LEVELS[Number(slider.value)];
+    slider.setAttribute("aria-valuetext", LABEL[lvl]);
+    const r = at(comb, lvl);
+    tiles.replaceChildren(
+      tile("AUC", num(r.auc, 3), lvl === "none" ? `95% interval ${num(r.auc_ci[0], 3)}–${num(r.auc_ci[1], 3)}` : delta(base.auc, r.auc, (x) => num(x, 3))),
+      tile("Fakes caught", pct(r.caught), lvl === "none" ? "at the model's own decision threshold" : delta(base.caught, r.caught, pctPts)),
+      tile("Real users flagged", pct(r.flagged_real), "real users never change, so neither does this"));
+
+    const rows = feats.map((f) => ({ label: f, values: { SHAP: A.importance.SHAP[lvl][f], LIME: A.importance.LIME[lvl][f] }, truth: A.importance.SHAP.none[f] }));
+    impBox.replaceChildren(
+      legend([{ label: "SHAP", color: S1 }, { label: "LIME", color: S2 }, { label: "SHAP with no attack", kind: "tick" }]),
+      hbars({ rows, series: [{ key: "SHAP", name: `SHAP (${LABEL[lvl].toLowerCase()})`, color: S1 }, { key: "LIME", name: `LIME (${LABEL[lvl].toLowerCase()})`, color: S2 }], truthName: "SHAP, no attack" }),
+      tableView(["Feature", `SHAP (${LABEL[lvl]})`, `LIME (${LABEL[lvl]})`, "SHAP (None)"], rows.map((x) => [x.label, pct(x.values.SHAP, 1), pct(x.values.LIME, 1), pct(x.truth, 1)])));
+
+    const sl = lvl === "none" ? "strong" : lvl;
+    const srows = [...singles, A.combined].map((k) => ({ label: A.attacks[k].name, tags: [A.attacks[k].cost], values: { auc: A.results[k][sl].auc }, truth: base.auc }));
+    singleBox.replaceChildren(
+      el("p", { class: "note", text: lvl === "none" ? "Showing strong attacks (move the slider to compare mild ones)." : `Showing ${LABEL[lvl].toLowerCase()} attacks.` }),
+      legend([{ label: "AUC under the attack", color: S1 }, { label: "AUC with no attack", kind: "tick" }]),
+      hbars({ rows: srows, series: [{ key: "auc", name: "AUC under attack", color: S1 }], truthName: "No attack", fmt: (x) => num(x, 3), max: 1 }),
+      tableView(["Attack", "Cost", "Changes", "AUC (mild)", "AUC (strong)", "Fakes caught (strong)"],
+        [...singles, A.combined].map((k) => [A.attacks[k].name, A.attacks[k].cost, A.attacks[k].changes.join(", "), num(A.results[k].mild.auc, 3), num(A.results[k].strong.auc, 3), pct(A.results[k].strong.caught)])));
+  };
+  slider.addEventListener("input", render);
+  render();
+
+  const list = (items, mark) => items.length
+    ? el("ul", { class: "findings" }, items.map((x) => el("li", {}, el("span", { class: "mark", "aria-hidden": "true", text: mark }), el("span", { text: x.text }))))
+    : el("p", { class: "note", text: "None found." });
+
+  return section("attack", "Under attack",
+    `Bots and trolls copy real users' habits (mimicry). Tested on a fresh population the model has never seen (${A.n} test accounts, ${A.n_fake} of them fake), with #trending removed everywhere. Real users are never changed.`,
+    card(el("h3", { text: `${A.attacks[A.combined].name}` }),
+      el("p", { class: "note", style: { marginTop: 0 }, text: `${A.attacks[A.combined].how} Changes: ${A.attacks[A.combined].changes.join(", ")}. Mild moves each feature halfway to a real user's value; strong copies it.` }),
+      el("div", { class: "strength-wrap" }, el("label", { for: "attack-strength", text: "Attack strength" }), slider, sliderLabels),
+      tiles),
+    card(el("h3", { text: "What it relies on under this attack" }),
+      el("p", { class: "note", style: { marginTop: 0 }, text: "Share of credit per feature for 50 humans, 50 bots and 50 trolls from the attacked population, at the strength chosen above." }), impBox),
+    card(el("h3", { text: "Which change hurts it most?" }), singleBox),
+    el("div", { class: "two-col", style: { marginTop: "12px" } },
+      el("div", { class: "card strengths" }, el("h3", { text: `Holds up (${A.strengths.length})` }), list(A.strengths, "+")),
+      el("div", { class: "card weaknesses" }, el("h3", { text: `Vulnerabilities (${A.weaknesses.length})` }), list(A.weaknesses, "–"))),
+    A.checklist.length ? card(el("h3", { text: "Attack tests to run before deploying" }),
+      el("ol", { class: "checklist" }, A.checklist.map((c) => el("li", {}, c.text, el("span", { class: "because", text: `Because: ${c.because}` }))))) : null);
 }
 
 // ------------------------------------------------------------------ family views
