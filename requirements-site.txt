@@ -1,7 +1,8 @@
-# Libraries for building the website's data (site/build/) and the adversarial results.
+# Everything needed to reproduce the project: data generators, model reloading, adversarial
+# results, the website's data and the tests. Tested with Python 3.10 on macOS (Apple silicon).
 #   pip install -r requirements-site.txt
-# Pinned to the versions verified by site/build/verify_models.py (all 26 models reproduce their
-# step-1 predictions). scikit-learn, xgboost, lightgbm and gensim must match the versions the
+# Pinned to the versions verified by site/build/verify_models.py (all 18 site models reproduce
+# their step-1 predictions). scikit-learn, xgboost, lightgbm and gensim must match the versions the
 # models were saved with, or the pickled models may fail to load.
 # The website itself (site/public/) is static and needs none of these.
 numpy==2.2.6
@@ -17,3 +18,5 @@ joblib==1.6.0
 shap==0.49.1
 lime==0.2.0.1
 captum==0.9.0
+# tests
+pytest==8.2.0

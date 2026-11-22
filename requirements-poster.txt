@@ -1,0 +1,4 @@
+# Only needed to rebuild the poster (poster/). The PDF also needs Google Chrome installed:
+# poster/build_poster.py prints poster/poster.html to PDF with headless Chrome.
+#   pip install -r requirements-poster.txt
+python-pptx==1.0.2
