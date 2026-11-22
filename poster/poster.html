@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<title>Explaining Anonymity Poster</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
+<style>
+@page { size: 36in 24in; margin: 0; }
+* { box-sizing: border-box; }
+html, body { margin: 0; background: #fbfaf7; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+body { width: 3456px; height: 2304px; overflow: hidden; color: #16181c; font-family: Inter, system-ui, sans-serif; font-size: 30px; line-height: 1.4; }
+h1, h2, .big, .ptitle { font-family: "Space Grotesk", Inter, sans-serif; }
+.poster { width: 3456px; height: 2304px; display: grid; grid-template-rows: 370px minmax(0, 1fr) 160px; }
+header { background: #16181c; color: #fff; display: grid; grid-template-columns: 1fr auto; align-items: center; padding: 0 96px; gap: 64px; }
+header h1 { margin: 0; font-size: 104px; line-height: 1.02; letter-spacing: -0.02em; }
+header h1 .t2 { display: block; font-size: 66px; font-weight: 600; color: #e9e6de; margin-top: 8px; letter-spacing: -0.01em; }
+header .who { font-size: 32px; color: #b9b6ad; margin-top: 22px; }
+header .qr { display: flex; align-items: center; gap: 28px; }
+header .qr .box { background: #fff; padding: 16px; border-radius: 12px; width: 270px; height: 270px; }
+header .qr .box svg { width: 100%; height: 100%; display: block; }
+header .qr .txt { font-size: 26px; color: #d9d6cd; max-width: 330px; }
+header .qr .txt b { color: #fff; font-size: 32px; display: block; margin-bottom: 6px; }
+main { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 72px; padding: 52px 96px 40px; min-height: 0; }
+section { display: flex; flex-direction: column; gap: 26px; min-width: 0; }
+.num { display: inline-flex; width: 64px; height: 64px; border-radius: 50%; background: #0f766e; color: #fff; font-family: "Space Grotesk"; font-weight: 700; font-size: 38px; align-items: center; justify-content: center; margin-right: 18px; flex: none; }
+h2 { margin: 0; font-size: 56px; line-height: 1.08; display: flex; align-items: center; letter-spacing: -0.01em; }
+.lead { margin: 0; color: #3d4047; }
+.card { background: #f1efe9; border-radius: 18px; padding: 26px 30px; }
+.card h3 { margin: 0 0 14px; font-size: 30px; font-family: "Space Grotesk"; }
+.legend { display: flex; flex-wrap: wrap; gap: 8px 26px; font-size: 23px; color: #3d4047; margin-bottom: 14px; }
+.lg { display: inline-flex; align-items: center; gap: 10px; }
+.lg i { width: 26px; height: 16px; border-radius: 4px; display: inline-block; }
+ul.find { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 16px; }
+ul.find li { padding-left: 34px; position: relative; }
+ul.find li::before { content: ""; position: absolute; left: 0; top: 14px; width: 14px; height: 14px; border-radius: 50%; background: #0f766e; }
+ul.find b { font-weight: 700; }
+.note { font-size: 21px; color: #62615c; margin: 6px 0 0; }
+.panels { display: flex; gap: 10px; justify-content: space-between; }
+.ptitle { font-size: 27px; font-weight: 600; margin: 0 0 0 60px; white-space: nowrap; }
+.pcount { font-size: 21px; color: #62615c; margin: 0 0 0 60px; }
+table.dis { width: 100%; border-collapse: collapse; font-size: 25px; }
+table.dis th { text-align: left; font-size: 21px; color: #62615c; font-weight: 600; padding: 0 12px 8px 0; border-bottom: 2px solid #d9d6cd; }
+table.dis td { padding: 12px 12px 12px 0; border-bottom: 1.5px solid #d9d6cd; vertical-align: top; }
+table.dis td.auc { white-space: nowrap; font-weight: 700; font-family: "Space Grotesk"; font-size: 30px; }
+.callouts { display: grid; grid-template-columns: 1fr; gap: 14px; }
+.callout { display: grid; grid-template-columns: 330px 1fr; gap: 26px; align-items: center; }
+.big { font-size: 62px; font-weight: 700; color: #0f766e; line-height: 1; letter-spacing: -0.02em; }
+.shot { width: 100%; height: 640px; object-fit: cover; object-position: top; border-radius: 14px; border: 2px solid #d9d6cd; display: block; }
+.flow { display: flex; align-items: center; gap: 10px; }
+.step { flex: 1 1 0; background: #fff; border: 2px solid #d9d6cd; border-radius: 14px; padding: 18px 14px; font-size: 23px; line-height: 1.25; text-align: center; min-height: 132px; display: flex; flex-direction: column; justify-content: center; }
+.step b { display: block; font-size: 24px; margin-bottom: 4px; }
+.step.hl { background: #0f766e; color: #fff; border-color: #0f766e; }
+.arrow { flex: none; width: 28px; height: 28px; }
+footer { background: #0f766e; color: #fff; display: flex; align-items: center; justify-content: space-between; padding: 0 96px; gap: 48px; }
+footer .msg { font-family: "Space Grotesk"; font-size: 46px; font-weight: 600; line-height: 1.15; max-width: 2700px; }
+footer .src { font-size: 22px; color: #cfe7e3; text-align: right; }
+</style></head>
+<body><div class="poster">
+
+<header>
+  <div>
+    <h1>Explaining Anonymity:<span class="t2">Adversarial Attacks and Science Communication</span></h1>
+    <div class="who">Ananya Jogalekar · Explainable AI, Duke University</div>
+  </div>
+  <div class="qr"><div class="box" id="qr" aria-label="QR code linking to the website"></div>
+    <div class="txt"><b>Try the site</b>Pick any of the 18 models and see its explanations, attacks and checklist.</div></div>
+</header>
+
+<main>
+<section>
+  <h2><span class="num">1</span>What the explanations told us</h2>
+  <p class="lead">We generated 5,000 accounts where we <b>know</b> what makes an account fake: a formula over 12 account stats, bursty posting, and giveaway words like “giveaway” and “sheep”. So every explanation can be graded right or wrong, not just plausible. Each model is explained with the two methods most used for its type (e.g. SHAP and LIME).</p>
+  <div class="card">
+    <h3>Where SHAP puts the credit (account-stat models)</h3>
+    <div class="legend"><span class="lg"><i style="background:#2a78d6"></i>Real signal (6 features)</span><span class="lg"><i style="background:#eb6834"></i>Near-copy</span><span class="lg"><i style="background:#1baf7a"></i>Decoys</span><span class="lg"><i style="background:#b9b6ad"></i>Noise</span></div><svg viewBox="0 0 990 528" width="990" height="528" role="img" aria-label="Share of SHAP credit by feature group for 11 models"><text x="364" y="24.0" font-size="24" text-anchor="end" fill="#16181c">NMF + logistic regression</text><rect x="380.0" y="0" width="565.0" height="32" rx="5" fill="#2a78d6"/><text x="392.0" y="24.0" font-size="23" font-weight="700" fill="#fff">95%</text><rect x="948.0" y="0" width="0.0" height="32" rx="5" fill="#eb6834"/><rect x="948.3" y="0" width="19.7" height="32" rx="5" fill="#1baf7a"/><rect x="971.0" y="0" width="6.0" height="32" rx="5" fill="#b9b6ad"/><text x="364" y="72.0" font-size="24" text-anchor="end" fill="#16181c">Linear SVM</text><rect x="380.0" y="48" width="518.0" height="32" rx="5" fill="#2a78d6"/><text x="392.0" y="72.0" font-size="23" font-weight="700" fill="#fff">87%</text><rect x="901.0" y="48" width="48.7" height="32" rx="5" fill="#eb6834"/><rect x="952.7" y="48" width="4.5" height="32" rx="5" fill="#1baf7a"/><rect x="960.2" y="48" width="16.8" height="32" rx="5" fill="#b9b6ad"/><text x="364" y="120.0" font-size="24" text-anchor="end" fill="#16181c">LightGBM</text><rect x="380.0" y="96" width="513.6" height="32" rx="5" fill="#2a78d6"/><text x="392.0" y="120.0" font-size="23" font-weight="700" fill="#fff">86%</text><rect x="896.6" y="96" width="39.4" height="32" rx="5" fill="#eb6834"/><rect x="939.0" y="96" width="10.3" height="32" rx="5" fill="#1baf7a"/><rect x="952.4" y="96" width="24.6" height="32" rx="5" fill="#b9b6ad"/><text x="364" y="168.0" font-size="24" text-anchor="end" fill="#16181c">XGBoost</text><rect x="380.0" y="144" width="479.7" height="32" rx="5" fill="#2a78d6"/><text x="392.0" y="168.0" font-size="23" font-weight="700" fill="#fff">80%</text><rect x="862.7" y="144" width="41.4" height="32" rx="5" fill="#eb6834"/><rect x="907.1" y="144" width="26.6" height="32" rx="5" fill="#1baf7a"/><rect x="936.6" y="144" width="40.4" height="32" rx="5" fill="#b9b6ad"/><text x="364" y="216.0" font-size="24" text-anchor="end" fill="#16181c">RBF SVM</text><rect x="380.0" y="192" width="468.6" height="32" rx="5" fill="#2a78d6"/><text x="392.0" y="216.0" font-size="23" font-weight="700" fill="#fff">79%</text><rect x="851.6" y="192" width="56.5" height="32" rx="5" fill="#eb6834"/><rect x="911.1" y="192" width="19.2" height="32" rx="5" fill="#1baf7a"/><rect x="933.2" y="192" width="43.8" height="32" rx="5" fill="#b9b6ad"/><text x="364" y="264.0" font-size="24" text-anchor="end" fill="#16181c">Random forest</text><rect x="380.0" y="240" width="465.0" height="32" rx="5" fill="#2a78d6"/><text x="392.0" y="264.0" font-size="23" font-weight="700" fill="#fff">78%</text><rect x="848.0" y="240" width="75.8" height="32" rx="5" fill="#eb6834"/><rect x="926.8" y="240" width="14.9" height="32" rx="5" fill="#1baf7a"/><rect x="944.8" y="240" width="32.2" height="32" rx="5" fill="#b9b6ad"/><text x="364" y="312.0" font-size="24" text-anchor="end" fill="#16181c">PCA + logistic regression</text><rect x="380.0" y="288" width="411.1" height="32" rx="5" fill="#2a78d6"/><text x="392.0" y="312.0" font-size="23" font-weight="700" fill="#fff">69%</text><rect x="794.1" y="288" width="60.7" height="32" rx="5" fill="#eb6834"/><rect x="857.8" y="288" width="63.7" height="32" rx="5" fill="#1baf7a"/><rect x="924.5" y="288" width="52.5" height="32" rx="5" fill="#b9b6ad"/><text x="364" y="360.0" font-size="24" text-anchor="end" fill="#16181c">Dense autoencoder</text><rect x="380.0" y="336" width="334.7" height="32" rx="5" fill="#2a78d6"/><text x="392.0" y="360.0" font-size="23" font-weight="700" fill="#fff">56%</text><rect x="717.7" y="336" width="7.7" height="32" rx="5" fill="#eb6834"/><rect x="728.5" y="336" width="75.6" height="32" rx="5" fill="#1baf7a"/><rect x="807.1" y="336" width="169.9" height="32" rx="5" fill="#b9b6ad"/><text x="364" y="408.0" font-size="24" text-anchor="end" fill="#16181c">Isolation forest</text><rect x="380.0" y="384" width="307.9" height="32" rx="5" fill="#2a78d6"/><text x="392.0" y="408.0" font-size="23" font-weight="700" fill="#fff">52%</text><rect x="690.9" y="384" width="43.2" height="32" rx="5" fill="#eb6834"/><rect x="737.1" y="384" width="78.4" height="32" rx="5" fill="#1baf7a"/><rect x="818.5" y="384" width="158.5" height="32" rx="5" fill="#b9b6ad"/><text x="364" y="456.0" font-size="24" text-anchor="end" fill="#16181c">One-class SVM</text><rect x="380.0" y="432" width="302.3" height="32" rx="5" fill="#2a78d6"/><text x="392.0" y="456.0" font-size="23" font-weight="700" fill="#fff">51%</text><rect x="685.3" y="432" width="21.1" height="32" rx="5" fill="#eb6834"/><rect x="709.4" y="432" width="82.7" height="32" rx="5" fill="#1baf7a"/><rect x="795.1" y="432" width="181.9" height="32" rx="5" fill="#b9b6ad"/><text x="364" y="504.0" font-size="24" text-anchor="end" fill="#16181c">Local outlier factor</text><rect x="380.0" y="480" width="291.4" height="32" rx="5" fill="#2a78d6"/><text x="392.0" y="504.0" font-size="23" font-weight="700" fill="#fff">49%</text><rect x="674.4" y="480" width="29.8" height="32" rx="5" fill="#eb6834"/><rect x="707.2" y="480" width="83.1" height="32" rx="5" fill="#1baf7a"/><rect x="793.3" y="480" width="183.7" height="32" rx="5" fill="#b9b6ad"/></svg>
+    <p class="note">Share of SHAP credit over 150 test accounts. Good models put most of it on the 6 features that really drive the label; anomaly detectors waste half on noise and decoys.</p>
+  </div>
+  <ul class="find">
+    <li><b>Right features, missed subtlety.</b> LightGBM gives 86% of its credit to the real signal, but only 8% to the burstiness × account-age interaction, which carries 19% of it.</li>
+    <li><b>Activity models ignore timing.</b> Shuffling all 168 hours of a week changes the LSTM's AUC by 0.003: it counts posts, not rhythm.</li>
+    <li><b>A shortcut fooled the text models.</b> #trending marked fakes only in training: the transformer fell from 0.998 to 0.873 AUC, and its explanations showed why.</li>
+    <li><b>Methods often disagree.</b> LIME gives different answers on re-runs; one explanation alone can mislead. 8 of 18 models pass all our checks.</li>
+  </ul>
+</section>
+
+<section>
+  <h2><span class="num">2</span>When the fakes fight back</h2>
+  <p class="lead">A fresh population of accounts whose bots and trolls disguise themselves, at mild and strong strength. Real users never change, #trending is gone, and every disguise is something a real operator can do cheaply.</p>
+  <div class="card">
+    <h3>Detection (AUC) as the disguise gets stronger</h3>
+    <div class="panels"><div class="panel"><div class="ptitle">Account stats</div><div class="pcount">11 models</div><svg viewBox="0 0 330 360" width="330" height="360" role="img" aria-label="Account stats: AUC under no, mild and strong disguise"><line x1="60" x2="330" y1="304.0" y2="304.0" stroke="#d9d6cd" stroke-width="1.5"/><text x="50" y="312.0" font-size="22" text-anchor="end" fill="#62615c">0.0</text><line x1="60" x2="330" y1="174.0" y2="174.0" stroke="#d9d6cd" stroke-width="2"/><text x="50" y="182.0" font-size="22" text-anchor="end" fill="#62615c">0.5</text><line x1="60" x2="330" y1="44.0" y2="44.0" stroke="#d9d6cd" stroke-width="1.5"/><text x="50" y="52.0" font-size="22" text-anchor="end" fill="#62615c">1.0</text><polyline points="94.0,82.1 195.0,122.3 286.0,168.0" fill="none" stroke="#c4c1b8" stroke-width="3" stroke-linejoin="round"/><polyline points="94.0,84.6 195.0,128.7 286.0,169.7" fill="none" stroke="#c4c1b8" stroke-width="3" stroke-linejoin="round"/><polyline points="94.0,90.5 195.0,129.1 286.0,166.4" fill="none" stroke="#c4c1b8" stroke-width="3" stroke-linejoin="round"/><polyline points="94.0,83.5 195.0,129.0 286.0,165.7" fill="none" stroke="#c4c1b8" stroke-width="3" stroke-linejoin="round"/><polyline points="94.0,104.5 195.0,132.9 286.0,167.1" fill="none" stroke="#c4c1b8" stroke-width="3" stroke-linejoin="round"/><polyline points="94.0,105.7 195.0,135.6 286.0,166.0" fill="none" stroke="#c4c1b8" stroke-width="3" stroke-linejoin="round"/><polyline points="94.0,139.7 195.0,198.4 286.0,168.7" fill="none" stroke="#c4c1b8" stroke-width="3" stroke-linejoin="round"/><polyline points="94.0,146.0 195.0,189.1 286.0,165.9" fill="none" stroke="#c4c1b8" stroke-width="3" stroke-linejoin="round"/><polyline points="94.0,152.1 195.0,200.7 286.0,170.5" fill="none" stroke="#c4c1b8" stroke-width="3" stroke-linejoin="round"/><polyline points="94.0,159.2 195.0,189.3 286.0,171.3" fill="none" stroke="#c4c1b8" stroke-width="3" stroke-linejoin="round"/><polyline points="94.0,82.5 195.0,123.8 286.0,166.7" fill="none" stroke="#2a78d6" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/><circle cx="94.0" cy="82.5" r="9" fill="#2a78d6" stroke="#fbfaf7" stroke-width="3"/><circle cx="195.0" cy="123.8" r="9" fill="#2a78d6" stroke="#fbfaf7" stroke-width="3"/><circle cx="286.0" cy="166.7" r="9" fill="#2a78d6" stroke="#fbfaf7" stroke-width="3"/><text x="84" y="60.5" font-size="24" font-weight="700" fill="#2a78d6">LightGBM</text><text x="94.0" y="346" font-size="22" text-anchor="middle" fill="#3d4047">None</text><text x="195.0" y="346" font-size="22" text-anchor="middle" fill="#3d4047">Mild</text><text x="286.0" y="346" font-size="22" text-anchor="middle" fill="#3d4047">Strong</text></svg></div><div class="panel"><div class="ptitle">Hourly activity</div><div class="pcount">4 models</div><svg viewBox="0 0 330 360" width="330" height="360" role="img" aria-label="Hourly activity: AUC under no, mild and strong disguise"><line x1="60" x2="330" y1="304.0" y2="304.0" stroke="#d9d6cd" stroke-width="1.5"/><text x="50" y="312.0" font-size="22" text-anchor="end" fill="#62615c">0.0</text><line x1="60" x2="330" y1="174.0" y2="174.0" stroke="#d9d6cd" stroke-width="2"/><text x="50" y="182.0" font-size="22" text-anchor="end" fill="#62615c">0.5</text><line x1="60" x2="330" y1="44.0" y2="44.0" stroke="#d9d6cd" stroke-width="1.5"/><text x="50" y="52.0" font-size="22" text-anchor="end" fill="#62615c">1.0</text><polyline points="94.0,44.1 195.0,77.3 286.0,138.3" fill="none" stroke="#c4c1b8" stroke-width="3" stroke-linejoin="round"/><polyline points="94.0,72.3 195.0,109.7 286.0,178.7" fill="none" stroke="#c4c1b8" stroke-width="3" stroke-linejoin="round"/><polyline points="94.0,46.3 195.0,83.3 286.0,173.2" fill="none" stroke="#c4c1b8" stroke-width="3" stroke-linejoin="round"/><polyline points="94.0,44.5 195.0,112.3 286.0,182.7" fill="none" stroke="#2a78d6" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/><circle cx="94.0" cy="44.5" r="9" fill="#2a78d6" stroke="#fbfaf7" stroke-width="3"/><circle cx="195.0" cy="112.3" r="9" fill="#2a78d6" stroke="#fbfaf7" stroke-width="3"/><circle cx="286.0" cy="182.7" r="9" fill="#2a78d6" stroke="#fbfaf7" stroke-width="3"/><text x="84" y="22.5" font-size="24" font-weight="700" fill="#2a78d6">LSTM</text><text x="94.0" y="346" font-size="22" text-anchor="middle" fill="#3d4047">None</text><text x="195.0" y="346" font-size="22" text-anchor="middle" fill="#3d4047">Mild</text><text x="286.0" y="346" font-size="22" text-anchor="middle" fill="#3d4047">Strong</text></svg></div><div class="panel"><div class="ptitle">Post text</div><div class="pcount">3 models</div><svg viewBox="0 0 330 360" width="330" height="360" role="img" aria-label="Post text: AUC under no, mild and strong disguise"><line x1="60" x2="330" y1="304.0" y2="304.0" stroke="#d9d6cd" stroke-width="1.5"/><text x="50" y="312.0" font-size="22" text-anchor="end" fill="#62615c">0.0</text><line x1="60" x2="330" y1="174.0" y2="174.0" stroke="#d9d6cd" stroke-width="2"/><text x="50" y="182.0" font-size="22" text-anchor="end" fill="#62615c">0.5</text><line x1="60" x2="330" y1="44.0" y2="44.0" stroke="#d9d6cd" stroke-width="1.5"/><text x="50" y="52.0" font-size="22" text-anchor="end" fill="#62615c">1.0</text><polyline points="94.0,66.7 195.0,174.1 286.0,293.2" fill="none" stroke="#c4c1b8" stroke-width="3" stroke-linejoin="round"/><polyline points="94.0,96.7 195.0,149.3 286.0,198.0" fill="none" stroke="#c4c1b8" stroke-width="3" stroke-linejoin="round"/><polyline points="94.0,58.4 195.0,87.6 286.0,162.1" fill="none" stroke="#2a78d6" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/><circle cx="94.0" cy="58.4" r="9" fill="#2a78d6" stroke="#fbfaf7" stroke-width="3"/><circle cx="195.0" cy="87.6" r="9" fill="#2a78d6" stroke="#fbfaf7" stroke-width="3"/><circle cx="286.0" cy="162.1" r="9" fill="#2a78d6" stroke="#fbfaf7" stroke-width="3"/><text x="84" y="36.4" font-size="24" font-weight="700" fill="#2a78d6">Transformer</text><text x="94.0" y="346" font-size="22" text-anchor="middle" fill="#3d4047">None</text><text x="195.0" y="346" font-size="22" text-anchor="middle" fill="#3d4047">Mild</text><text x="286.0" y="346" font-size="22" text-anchor="middle" fill="#3d4047">Strong</text></svg></div></div>
+    <p class="note">Combined disguise per input type; grey lines are the other models of that type. AUC 1.0 = perfect; the darker line at 0.5 = a coin flip.</p>
+  </div>
+  <table class="dis">
+    <tr><th>Input</th><th>One cheap disguise</th><th>AUC</th></tr>
+    <tr><td>Account stats</td><td>post as often as a real user</td><td class="auc">0.85 → 0.70</td></tr>
+    <tr><td>Hourly activity</td><td>post only as much as a real user</td><td class="auc">1.00 → 0.49</td></tr>
+    <tr><td>Post text</td><td>misspell the giveaway words (g1veaway)</td><td class="auc">0.94 → 0.51</td></tr>
+  </table>
+  <div class="callouts">
+    <div class="callout"><div class="big">76%→24%</div><div>Fakes LightGBM catches once they copy real users' habits.</div></div>
+    <div class="callout"><div class="big">3–6%</div><div>of SHAP's credit moves while the account-stat models fail: <b>the explanations don't warn you</b>.</div></div>
+    <div class="callout"><div class="big">0.41</div><div>Isolation forest under a <i>mild</i> disguise (0.52 under strong): half-disguised fakes look more typical than real users.</div></div>
+  </div>
+</section>
+
+<section>
+  <h2><span class="num">3</span>From notebook to pipeline</h2>
+  <p class="lead">Explainability results usually live in notebooks, one model at a time: hard to compare, and never turned into a decision. A developer about to deploy a detector needs a <b>verdict</b> and a <b>to-do list</b>, not 40 SHAP plots.</p>
+  <img class="shot" src="../docs/img/site_model_page.png" alt="A model page on the Explaining Anonymity website">
+  <ul class="find">
+    <li><b>A verdict from published rules.</b> “Good” only if accurate, stable on new data <i>and</i> its explanations find the real signal. Same rules for every model; nothing hand-written.</li>
+    <li><b>Strengths, weaknesses and a checklist</b>, each item saying why it is there.</li>
+    <li><b>Under attack:</b> a strength slider shows detection and explanations as fakes hide better.</li>
+  </ul>
+  <div class="card">
+    <h3>A step in the deployment pipeline</h3>
+    <div class="flow">
+      <div class="step"><b>Train</b>new model version</div>
+      <svg class="arrow" viewBox="0 0 28 28" aria-hidden="true"><path d="M4 14h18M15 7l7 7-7 7" fill="none" stroke="#62615c" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <div class="step hl"><b>Answer-key test</b>are explanations right?</div>
+      <svg class="arrow" viewBox="0 0 28 28" aria-hidden="true"><path d="M4 14h18M15 7l7 7-7 7" fill="none" stroke="#62615c" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <div class="step hl"><b>Attack test</b>does it survive disguises?</div>
+      <svg class="arrow" viewBox="0 0 28 28" aria-hidden="true"><path d="M4 14h18M15 7l7 7-7 7" fill="none" stroke="#62615c" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <div class="step"><b>Verdict + checklist</b>deploy or fix</div>
+    </div>
+    <p class="note">Already code: data generators, evaluation scripts, rules with 66 tests, and a static site rebuilt in seconds. Prototype today covers 18 models on synthetic data; next, letting teams plug in their own model and data.</p>
+  </div>
+</section>
+</main>
+
+<footer>
+  <div class="msg">Accurate and well-explained is not the same as safe to deploy: every model fell to cheap disguises, and explanations rarely warned us.</div>
+  <div class="src">github.com/ananyafied/Explaining_Anonymity_Website<br>All data synthetic · results reproducible from seeds</div>
+</footer>
+</div>
+<script>
+  (function () {
+    var qr = qrcode(0, "M"); qr.addData("https://ananyafied.github.io/Explaining_Anonymity_Website/"); qr.make();
+    document.getElementById("qr").innerHTML = qr.createSvgTag({ cellSize: 4, margin: 0, scalable: true });
+  })();
+</script>
+</body></html>

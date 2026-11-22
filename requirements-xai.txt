@@ -1,5 +1,6 @@
-# Extra libraries for step 2 (notebooks 02-07). Install after requirements.txt and requirements-models.txt:
-#   pip install -r requirements-xai.txt
+# Libraries for re-running the step 2 notebooks (notebooks/02-07). For exact versions that
+# reproduce the saved models, install requirements-site.txt first, then this file:
+#   pip install -r requirements-site.txt -r requirements-xai.txt
 # PyTorch Geometric's explain module needs torch_geometric >= 2.3 (already needed in step 1).
 shap>=0.44
 lime>=0.2.0.1
