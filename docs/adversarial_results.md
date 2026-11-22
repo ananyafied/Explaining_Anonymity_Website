@@ -75,8 +75,10 @@ models both are just unknown words. All three decision thresholds are out of dat
 In all three, the credit given to the giveaway word falls from 40–80% of the total to about 0–10%
 under the strong attack: the explanations show the signal is gone.
 
-## Not yet attacked
+## Not on the website
 
 The 7 graph models (GCN, GAT, GraphSAGE, R-GCN, node2vec, DeepWalk, label spreading) and the
-multimodal fusion model have no adversarial results. Attacking them needs new accounts wired into
-the follower graph (the optional Phase 5).
+multimodal fusion model were never attacked: attacking them would need new accounts wired into the
+follower graph, which was left out of scope. They are therefore not shown on the website. Their
+original fitting and explainability results remain in `outputs/step1_fit/` and
+`outputs/step2_explain/`.

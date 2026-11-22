@@ -191,24 +191,6 @@ export function hourChart({ counts, planted, series }) {
   return wrap;
 }
 
-// ------------------------------------------------------------------ tall segmented bars (part-to-whole)
-/** rows: [{who, parts: [{name, value, color, darkInk}]}] — values are shares summing to ~1. */
-export function segBars(rows) {
-  const box = el("div");
-  for (const r of rows) {
-    const bar = el("div", { class: "segbar", role: "img", "aria-label": `${r.who}: ${r.parts.map((p) => `${p.name} ${pct(p.value)}`).join(", ")}` });
-    for (const p of r.parts) {
-      if (!p.value) continue;
-      const seg = el("div", { class: p.darkInk ? "dark-ink" : "", "--c": p.color, style: { flex: `${p.value} 1 0` } });
-      if (p.value >= 0.12) seg.textContent = pct(p.value);
-      bindTip(seg, `${r.who} · ${p.name}`, () => [{ name: "Share of credit", color: p.color, value: pct(p.value) }]);
-      bar.append(seg);
-    }
-    box.append(el("div", { class: "segrow" }, el("div", { class: "who", text: r.who }), bar));
-  }
-  return box;
-}
-
 // ------------------------------------------------------------------ segmented control
 export function segTabs(options, current, onChange) {
   const box = el("div", { class: "seg-tabs", role: "group" });

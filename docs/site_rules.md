@@ -5,6 +5,10 @@ is written by hand: fixed rules in [`site/build/rules.py`](../site/build/rules.p
 numbers into those labels. This page is the human-readable version of those rules.
 `tests/test_site_rules.py` checks that the thresholds below match the code.
 
+The site shows 18 models: 11 that read account stats, 4 that read hourly activity and 3 that read
+post text. The rules for graph and multimodal models are kept in the code and below for
+completeness, but those models are not on the site, because they were never attacked.
+
 Inputs come from step 1 (`outputs/step1_fit/metrics.csv`: test, validation and train AUC) and step 2
 (`outputs/step2_explain/<family>/`: the explanation scorecards and probes).
 

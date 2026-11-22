@@ -22,8 +22,9 @@ The generated data (`adversarial/data/`, about 72 MB) is not committed, for the 
   and no label changes: an attacked bot is still a bot.
 - **`#trending` is gone.** It is removed from every post in the population, so no model can lean
   on it. (In the original data it was a trap that only signalled fakes during training.)
-- **Account stats, hourly activity and post text are attacked**, each separately (the follower
-  graph is not). An account-stat attack changes only account stats, an activity attack only the
+- **Account stats, hourly activity and post text are attacked**, each separately. The follower
+  graph is not, so the graph and multimodal models have no adversarial results (and are not on the
+  website). An account-stat attack changes only account stats, an activity attack only the
   168 hourly counts, a text attack only the posts, so each model family is tested on its own input.
 
 ## 2. A fresh population

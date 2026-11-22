@@ -14,29 +14,14 @@
    "key": "text",
    "name": "Post text",
    "about": "These models read short posts. Credit is shared out over the words, and we know which words are planted markers and which hashtag is a trap."
-  },
-  {
-   "key": "graph",
-   "name": "Follower graph",
-   "about": "These models read who interacts with whom. Explanations point at edges (or, for the embedding models, at abstract dimensions), and we know which accounts form coordinated troll rings."
-  },
-  {
-   "key": "multimodal",
-   "name": "Multimodal",
-   "about": "This model reads three kinds of input at once. Credit is shared out over the three blocks: account stats, post text and the follower graph."
   }
  ],
  "methods_info": {
   "SHAP": "Shares the model's score out among its inputs using Shapley values from game theory: each input gets its average contribution over every order in which inputs could be added. Exact for tree models (TreeSHAP); sampled for the others (KernelSHAP), which can make re-runs differ slightly.",
   "LIME": "Makes many slightly altered copies of the input, watches how the score changes, and fits a simple straight-line model to those changes. The line's weights are the explanation. Its random sampling means re-runs can disagree.",
-  "Integrated Gradients": "Slides the input from a blank starting point (no posts, or no edges and features) up to the real input, and adds up how much each part moved the model's output along the way. No randomness: re-runs give the same answer.",
+  "Integrated Gradients": "Slides the input from a blank starting point (a week with no posts) up to the real input, and adds up how much each part moved the model's output along the way. No randomness: re-runs give the same answer.",
   "GradientSHAP": "SHAP's method for neural networks: repeats the Integrated Gradients idea from many random starting points and averages them. It estimates Shapley values, so it is a form of SHAP, but re-runs can differ.",
-  "Grad-CAM": "Looks inside the network's last convolution layer and highlights the stretches of the week that pushed the output up. Works at half the time resolution, so it lights up regions rather than single hours.",
-  "GNNExplainer": "Learns the smallest set of edges and features that still produces the same prediction for an account, by training a soft on/off mask. Starts from a random mask, so re-runs can differ.",
-  "Seed contribution": "Label spreading's score is literally a sum over the accounts whose labels it was given (the seeds). This lists each seed's share of that sum. Exact, with nothing approximated; it is what SHAP would give for this model.",
-  "Leave-one-seed-out": "Removes one seed label at a time and recomputes the score; the change is that seed's importance. Exact.",
-  "Block Shapley": "Exact Shapley values (the idea behind SHAP) over three blocks of input: account stats, post text and the follower graph. The model is run with every combination of blocks switched on or off.",
-  "Drop-one ablation": "Removes one block of input at a time (account stats, text or graph) and measures how far the score falls."
+  "Grad-CAM": "Looks inside the network's last convolution layer and highlights the stretches of the week that pushed the output up. Works at half the time resolution, so it lights up regions rather than single hours."
  },
  "models": [
   {
@@ -347,146 +332,20 @@
    ],
    "test_auc": 0.7222,
    "verdict": "weak"
-  },
-  {
-   "key": "gcn",
-   "name": "GCN",
-   "family": "graph",
-   "kind": "classifier",
-   "input": "12 standardised profile stats as node features + undirected interaction graph",
-   "methods": [
-    "GNNExplainer",
-    "Integrated Gradients"
-   ],
-   "aliases": [
-    "gcn",
-    "graph convolutional network"
-   ],
-   "test_auc": 0.9645,
-   "verdict": "weak"
-  },
-  {
-   "key": "gat",
-   "name": "GAT",
-   "family": "graph",
-   "kind": "classifier",
-   "input": "12 standardised profile stats as node features + undirected interaction graph",
-   "methods": [
-    "GNNExplainer",
-    "Integrated Gradients"
-   ],
-   "aliases": [
-    "gat",
-    "graph attention"
-   ],
-   "test_auc": 0.9485,
-   "verdict": "weak"
-  },
-  {
-   "key": "graphsage",
-   "name": "GraphSAGE",
-   "family": "graph",
-   "kind": "classifier",
-   "input": "12 standardised profile stats as node features + undirected interaction graph",
-   "methods": [
-    "GNNExplainer",
-    "Integrated Gradients"
-   ],
-   "aliases": [
-    "sage",
-    "graph sage"
-   ],
-   "test_auc": 0.9324,
-   "verdict": "weak"
-  },
-  {
-   "key": "rgcn",
-   "name": "R-GCN",
-   "family": "graph",
-   "kind": "classifier",
-   "input": "12 standardised profile stats as node features + undirected interaction graph",
-   "methods": [
-    "GNNExplainer",
-    "Integrated Gradients"
-   ],
-   "aliases": [
-    "rgcn",
-    "relational gcn"
-   ],
-   "test_auc": 0.9341,
-   "verdict": "weak"
-  },
-  {
-   "key": "node2vec_logreg",
-   "name": "Node2vec + logistic regression",
-   "family": "graph",
-   "kind": "classifier",
-   "input": "interaction graph -> random-walk embedding per account",
-   "methods": [
-    "SHAP",
-    "LIME"
-   ],
-   "aliases": [
-    "node2vec"
-   ],
-   "test_auc": 0.5906,
-   "verdict": "weak"
-  },
-  {
-   "key": "deepwalk_logreg",
-   "name": "DeepWalk + logistic regression",
-   "family": "graph",
-   "kind": "classifier",
-   "input": "interaction graph -> random-walk embedding per account",
-   "methods": [
-    "SHAP",
-    "LIME"
-   ],
-   "aliases": [
-    "deepwalk",
-    "deep walk"
-   ],
-   "test_auc": 0.6322,
-   "verdict": "weak"
-  },
-  {
-   "key": "label_spreading",
-   "name": "Label spreading",
-   "family": "graph",
-   "kind": "propagation",
-   "input": "interaction graph + a few known labels",
-   "methods": [
-    "Seed contribution",
-    "Leave-one-seed-out"
-   ],
-   "aliases": [
-    "label propagation"
-   ],
-   "test_auc": 0.4995,
-   "verdict": "weak"
-  },
-  {
-   "key": "multimodal_fusion",
-   "name": "Multimodal fusion",
-   "family": "multimodal",
-   "kind": "classifier",
-   "input": "text embedding (frozen transformer) + 12 profile stats + interaction graph",
-   "methods": [
-    "Block Shapley",
-    "Drop-one ablation"
-   ],
-   "aliases": [
-    "fusion",
-    "multimodal"
-   ],
-   "test_auc": 0.9484,
-   "verdict": "weak"
   }
  ],
  "excluded": {
   "belief_propagation": "Scores are inverted (test AUC 0.10).",
   "svd_logreg": "Identical to PCA + logistic regression.",
-  "baseline_all_authentic": "Reference baseline, not a model."
+  "baseline_all_authentic": "Reference baseline, not a model.",
+  "gcn": "Not attacked: the site only shows models with adversarial results.",
+  "gat": "Not attacked: the site only shows models with adversarial results.",
+  "graphsage": "Not attacked: the site only shows models with adversarial results.",
+  "rgcn": "Not attacked: the site only shows models with adversarial results.",
+  "node2vec_logreg": "Not attacked: the site only shows models with adversarial results.",
+  "deepwalk_logreg": "Not attacked: the site only shows models with adversarial results.",
+  "label_spreading": "Not attacked: the site only shows models with adversarial results.",
+  "multimodal_fusion": "Not attacked: the site only shows models with adversarial results."
  },
  "criteria": {
   "correctness_informative_share": "Share of credit on the 6 features that actually drive the label",
