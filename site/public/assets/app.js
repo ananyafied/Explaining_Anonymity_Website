@@ -1,29 +1,20 @@
-import { el, pct, num, legend, tableView, hbars, signedTable, hourChart, segBars, segTabs, hideTip } from "./charts.js";
+import { el, pct, num, legend, tableView, hbars, signedTable, hourChart, segTabs, hideTip } from "./charts.js";
 
 const S1 = "var(--s1)", S2 = "var(--s2)", S3 = "var(--s3)", TRUTH = "var(--truth)";
 const KIND_LABEL = { human: "Human", bot: "Bot", troll: "Troll" };
 const SCORE_LABEL = {
   classifier: "probability of being fake",
   anomaly: "anomaly score (higher = more unusual)",
-  propagation: "share of 'fake' label reaching the account",
 };
 const KIND_TEXT = {
   classifier: "Trained with labels to output the probability that an account is fake.",
   anomaly: "Trained without labels to score how unusual an account is.",
-  propagation: "Spreads a few known labels along the graph to the other accounts.",
 };
 const ROLE_TAG = {
   informative_linear: "drives label", nonlinear_threshold: "threshold",
   distractor: "decoy", noise: "noise",
 };
 const roleTag = (role) => role.startsWith("interaction") ? "interaction" : role.startsWith("redundant_proxy") ? "near-copy" : ROLE_TAG[role];
-const ATTACK_PHASE = {
-  tabular: "Attack results are being generated.",
-  sequences: "Attack results are being generated.",
-  text: "Attack results are being generated.",
-  graph: "Planned (optional phase): graph attacks need new accounts wired into the network.",
-  multimodal: "Planned (optional phase): this model will face the combined attacks.",
-};
 
 let CATALOG;
 const $ = (s) => document.querySelector(s);
@@ -56,7 +47,7 @@ function setupPicker() {
   const open = () => {
     shown = matches(input.value);
     list.replaceChildren();
-    if (!shown.length) list.append(el("li", { class: "empty", text: "No model matches. Try 'forest', 'svm', 'lstm' or 'gcn'." }));
+    if (!shown.length) list.append(el("li", { class: "empty", text: "No model matches. Try 'forest', 'svm', 'lstm' or 'transformer'." }));
     for (const fam of CATALOG.families) {
       const ms = shown.filter((m) => m.family === fam.key);
       if (!ms.length) continue;
@@ -129,8 +120,8 @@ function methodsBlock(m) {
   let agree = null;
   if (a != null) {
     const T = CATALOG.thresholds;
-    const word = m.key === "label_spreading" ? "Agree by construction" : a >= T.agree_high ? "Agree" : a >= T.agree_low ? "Partly agree" : "Disagree";
-    const cls = m.key === "label_spreading" ? "neutral" : a >= T.agree_high ? "good" : a >= T.agree_low ? "neutral" : "weak";
+    const word = a >= T.agree_high ? "Agree" : a >= T.agree_low ? "Partly agree" : "Disagree";
+    const cls = a >= T.agree_high ? "good" : a >= T.agree_low ? "neutral" : "weak";
     agree = el("div", { class: "agree" }, el("span", { class: `pill ${cls}`, text: word }),
       el("span", { text: `The two methods' rankings of what matters have a rank correlation of ${num(a)} (1 = identical order, 0 = unrelated).` }));
   }
@@ -168,7 +159,7 @@ function checklistSection(m) {
 
 function attackSection(m) {
   const A = m.attack;
-  if (!A) return section("attack", "Under attack", null, card(el("p", { class: "coming", style: { margin: 0 }, text: ATTACK_PHASE[m.family] })));
+  if (!A) return null;  // every model on the site has attack results; guard against a missing file
   const LEVELS = ["none", "mild", "strong"], LABEL = { none: "None", mild: "Mild", strong: "Strong" };
   const base = A.results.none, comb = A.results[A.combined];
   const at = (res, lvl) => (lvl === "none" ? base : res[lvl]);
@@ -386,58 +377,7 @@ function textView(m) {
   return [reliance, top, examples];
 }
 
-function graphView(m) {
-  const ev = m.evidence, out = [];
-  const rel = ev.reliance || {};
-  if (m.view.troll_edge_importance) {
-    const ti = m.view.troll_edge_importance, [M1, M2] = m.methods;
-    const rows = [
-      { label: "Edges inside the troll's ring", values: { [M1]: ti[M1].ring_edges, [M2]: ti[M2].ring_edges } },
-      { label: "Other edges", values: { [M1]: ti[M1].other_edges, [M2]: ti[M2].other_edges } },
-    ];
-    out.push(card(el("h3", { text: "Do the explanations find troll rings?" }),
-      legend([{ label: M1, color: S1 }, { label: M2, color: S2 }]),
-      hbars({ rows, series: [{ key: M1, name: M1, color: S1 }, { key: M2, name: M2, color: S2 }], fmt: (x) => num(x, 2), max: 1 }),
-      el("p", { class: "note", text: `Average importance of each edge around 50 explained trolls, scaled so each troll's most important edge is 1 (${ti[M1].n_ring} ring edges, ${ti[M1].n_other} others). Ring edges should score clearly higher.` }),
-      tableView(["Edges", M1, M2], rows.map((r) => [r.label, num(r.values[M1], 3), num(r.values[M2], 3)]))));
-  }
-  if (ev.embedding_probe) {
-    out.push(card(el("h3", { text: "What do the embedding dimensions encode?" }),
-      el("div", { class: "tiles" },
-        tile("Predicts degree", `R² ${num(ev.embedding_probe.r2_predicting_log_degree)}`, "how much of an account's connection count the 32 dimensions encode"),
-        tile("Predicts ring membership", `AUC ${num(ev.embedding_probe.auc_predicting_troll_ring_membership)}`, "whether an account is in a troll ring")),
-      el("p", { class: "note", text: "SHAP and LIME can only say which of 32 unnamed dimensions mattered. This probe is the closest the model gets to a human-readable explanation." })));
-  }
-  out.push(card(el("h3", { text: "How much does it lean on the graph, and on degree?" }),
-    el("div", { class: "tiles" },
-      tile("Score vs degree", num(rel.spearman_with_degree), "rank correlation with the number of connections"),
-      tile("Degree alone", `AUC ${num(ev.degree_alone_auc, 3)}`, "counting connections, nothing else"),
-      rel.auc_half_edges != null ? tile("Half the edges removed", `AUC ${num(rel.auc_half_edges, 3)}`, `vs ${num(m.performance.test_auc, 3)} with all edges`) : null),
-    el("p", { class: "note", text: "Bots and trolls have more connections than humans in this data, so counting connections is a strong shortcut. A model that mostly counts them will flag popular real accounts too." })));
-  return out;
-}
-
-function multimodalView(m) {
-  const v = m.view, ev = m.evidence;
-  const names = v.blocks, colours = { tab: S1, text: S2, graph: S3 };
-  const cards = m.methods.map((meth) => {
-    const rows = ["human", "bot", "troll"].map((k) => ({ who: KIND_LABEL[k], parts: ["tab", "text", "graph"].map((b) => ({ name: names[b], value: v.block_share_by_kind[meth][k][b], color: colours[b] })) }));
-    return el("div", {}, el("h3", { style: { fontSize: "15px" }, text: meth }), segBars(rows));
-  });
-  const shares = card(el("h3", { text: "Which kind of evidence does it rely on?" }),
-    legend(["tab", "text", "graph"].map((b) => ({ label: names[b], color: colours[b] }))), ...cards,
-    el("p", { class: "note", text: "Share of credit per input block, averaged over test accounts of each kind. Trolls should lean on the graph (their rings); bots and trolls on text (their marker words)." }),
-    tableView(["Method", "Kind", ...["tab", "text", "graph"].map((b) => names[b])], m.methods.flatMap((meth) => ["human", "bot", "troll"].map((k) => [meth, KIND_LABEL[k], ...["tab", "text", "graph"].map((b) => pct(v.block_share_by_kind[meth][k][b]))]))));
-  const label = (key) => key === "(nothing)" ? "Nothing" : key.split("+").map((b) => names[b]).join(" + ");
-  const co = Object.entries(ev.coalition_auc).filter(([k]) => k !== "(nothing)").sort((a, b) => b[1] - a[1]);
-  const coal = card(el("h3", { text: "How well each combination of inputs works" }),
-    hbars({ rows: co.map(([k, a]) => ({ label: label(k), values: { auc: a } })), series: [{ key: "auc", name: "Test AUC", color: S1 }], fmt: (x) => num(x, 3), max: 1 }),
-    el("p", { class: "note", text: "The model's test AUC with only some input blocks switched on (the others replaced by their training average or an empty graph). Partly off-distribution, since the model always saw all three in training." }),
-    tableView(["Inputs", "Test AUC"], co.map(([k, a]) => [label(k), num(a, 3)])));
-  return [shares, coal];
-}
-
-const FAMILY_VIEW = { tabular: tabularView, sequences: sequencesView, text: textView, graph: graphView, multimodal: multimodalView };
+const FAMILY_VIEW = { tabular: tabularView, sequences: sequencesView, text: textView };
 
 // ------------------------------------------------------------------ pages
 async function renderModel(key) {
@@ -485,8 +425,59 @@ function renderOverview(message) {
       el("div", { class: "overview" }, cards)));
 }
 
+const REPO = "https://github.com/ananyafied/Explaining_Anonymity_Website/blob/main/";
+
+function renderAbout() {
+  document.title = "About · Explaining Anonymity";
+  $("#model-input").value = "";
+  const p = (...kids) => el("p", {}, ...kids);
+  const a = (href, text) => el("a", { href, text });
+  const ul = (...items) => el("ul", { class: "about-list" }, items.map((i) => el("li", {}, ...[i].flat())));
+  const nModels = CATALOG.models.length, nGood = CATALOG.models.filter((m) => m.verdict === "good").length;
+  $("#content").replaceChildren(el("div", { class: "about" },
+    section("about-what", "What this is", null, card(
+      p(`A tool for developers deciding whether to deploy a model that detects fake, bot and troll accounts. Pick one of ${nModels} models and the site shows what the model relies on, whether its explanations point at the real signal, how it holds up when the fakes start hiding, and what to test before it goes live.`),
+      p("Every number comes from saved results; nothing is written by hand. The model pages are generated from fixed rules, so every model is judged the same way."))),
+    section("about-data", "The data: fake accounts with an answer key", null, card(
+      p("All accounts are synthetic: 5,000 generated accounts, about 30% of them bots or trolls. Because we generated them, we know exactly what makes an account fake, so an explanation can be scored as right or wrong rather than just plausible:"),
+      ul("Account stats: a known formula decides which accounts are fake. Six of the 12 stats matter (one only through an interaction, one only above a threshold); the others are a near-copy, two decoys and three noise columns.",
+        "Hourly activity: bots post in bursts every 6, 8 or 12 hours; each troll ring shares two 3-hour windows.",
+        "Post text: bots and trolls use giveaway words (giveaway, promo, idiot, sheep and so on) in about a third of their posts.",
+        ["A trap: the hashtag #trending appeared mostly in fake accounts' posts during training, but equally in real and fake posts in the test data. Models that leaned on it got worse on new data."]),
+      p("Details: ", a(`${REPO}docs/synthetic_data.md`, "how the data is generated"), "."))),
+    section("about-models", "The models and their explanations", null, card(
+      p(`${nModels} models in three families: 11 that read account stats, 4 that read a week of hourly activity, and 3 that read post text. Each is explained with the two methods most common for its type: SHAP and LIME for the account-stat and text models; Integrated Gradients with GradientSHAP or Grad-CAM for the activity models. Every model page describes its two methods in plain language.`),
+      p("Each explanation is scored on four things:"),
+      ul("Correctness: does it find the planted signal?", "Faithfulness: does removing what it calls important actually change the score?",
+        "Agreement: do the model's two methods rank inputs the same way?", "Stability: does it give the same answer when re-run, or when the input changes a tiny bit?"))),
+    section("about-judged", "How a model is judged", null, card(
+      p(`A model is labelled good only if it passes three checks: it is accurate (within 0.06 AUC of the best achievable for account stats, or of the best model in its family otherwise), it holds up on new data (no big drop from validation to test), and its explanations find the planted signal. ${nGood} of the ${nModels} models pass. Strengths, weaknesses and the pre-deployment checklist come from the same fixed rules.`),
+      p("All thresholds: ", a(`${REPO}docs/site_rules.md`, "how models are labelled"), "."))),
+    section("about-attack", "How a model is attacked", null, card(
+      p("Each model also meets a fresh population of accounts whose bots and trolls actively hide, with #trending removed everywhere. Real users are never changed. Each attack comes at mild and strong strength, alone and combined:"),
+      ul("Account stats: fakes copy a real user's posting rate, replies, links, timing, burstiness or (expensively) account age.",
+        "Hourly activity: fakes move or spread their bursts, fake a daily rhythm, or post only as much as a real user.",
+        "Post text: fakes disguise or swap their giveaway words and pad their posts with ordinary words."),
+      p("Write-ups: ", a(`${REPO}docs/adversarial_dataset.md`, "how the dataset was built"), " · ", a(`${REPO}docs/adversarial_attacks.md`, "the attacks"), " · ", a(`${REPO}docs/adversarial_results.md`, "results by model"), "."))),
+    section("about-found", "What we found", null, card(
+      ul("Every model can be defeated by cheap changes, and one change usually does most of the damage: posting rate or replies for account stats, weekly volume for activity, the giveaway word for text.",
+        "The activity models ignore timing entirely; they count posts. Moving bursts does nothing, posting less breaks them.",
+        "For the account-stat models, explanations barely change while the model fails, so watching explanations would not reveal an attack.",
+        "Some explanations are misleading on their own: the two methods often disagree, and LIME gives different answers on re-runs.",
+        "Decision thresholds need care: the anomaly detectors flag most real users, and the text models' thresholds stopped working once #trending was gone."))),
+    section("about-limits", "Limits", null, card(
+      ul("The data is synthetic. Real accounts are messier, and real operators adapt in ways a generator does not.",
+        "The attacker cannot see the models; one that could query them would do at least as well.",
+        "Each family is attacked on its own input. A real operator would disguise everything at once.",
+        "Explanations are scored on samples of 150 accounts (or 60 posts), so small differences between models are not meaningful.",
+        "Graph and multimodal models were trained in this project but are not on the site, because they were never attacked."))),
+    section("about-credits", "Credits", null, card(
+      p("Final project for Dr Brinnae Bent's Explainable AI course at Duke University. Source code, data generators, results and tests: ", a("https://github.com/ananyafied/Explaining_Anonymity_Website", "github.com/ananyafied/Explaining_Anonymity_Website"), ".")))));
+}
+
 function route() {
   hideTip();
+  if (location.hash === "#about") { renderAbout(); return; }
   const key = new URLSearchParams(location.hash.slice(1)).get("model");
   if (key) renderModel(key); else renderOverview();
 }

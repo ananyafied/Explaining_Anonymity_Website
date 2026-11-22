@@ -106,8 +106,8 @@ Automated tests (`tests/test_adversarial.py`, 18 tests) confirm that:
   models. An attacker who could query the models directly would do at least as well.
 - Each family is attacked separately. A real operator would attack every input at once, which is
   what the planned graph and multimodal attacks would test.
-- The follower graph is not attacked yet, so the graph and multimodal models have no adversarial
-  results.
+- The follower graph was not attacked, so the graph and multimodal models have no adversarial
+  results and are not shown on the website.
 
 ## Where things are
 

@@ -11,7 +11,10 @@
 <body>
 <header class="site">
   <div class="wrap">
-    <div class="eyebrow">Explainable AI · fake account detection</div>
+    <nav class="top" aria-label="Site">
+      <div class="eyebrow">Explainable AI · fake account detection</div>
+      <div class="links"><a href="#">All models</a><a href="#about">About</a></div>
+    </nav>
     <h1>Explaining Anonymity</h1>
     <p class="lede">Pick a model that detects fake, bot and troll accounts. See what it relies on, check its explanations against an answer key, and get a list of what to test before you deploy it.</p>
     <div class="picker">
@@ -28,7 +31,7 @@
         <button type="button" data-key="isolation_forest">Isolation forest</button> ·
         <button type="button" data-key="cnn1d">1D CNN</button> ·
         <button type="button" data-key="transformer">Transformer</button> ·
-        <button type="button" data-key="gcn">GCN</button>
+        <button type="button" data-key="lstm">LSTM</button>
       </div>
     </div>
   </div>
@@ -38,7 +41,7 @@
 </main>
 <footer class="site">
   <div class="wrap">
-    <p>All data is synthetic: 5,000 accounts generated with a known answer key, so every explanation can be scored as right or wrong. Adversarial results are being added in stages.</p>
+    <p>All data is synthetic: 5,000 accounts generated with a known answer key, so every explanation can be scored as right or wrong. <a href="#about">About this site</a>.</p>
     <p>Final project for Dr Brinnae Bent's Explainable AI course at Duke University ·
       <a href="https://github.com/ananyafied/Explaining_Anonymity_Website">Source on GitHub</a> ·
       <a href="https://github.com/ananyafied/Explaining_Anonymity_Website/blob/main/docs/site_rules.md">How models are labelled</a> ·

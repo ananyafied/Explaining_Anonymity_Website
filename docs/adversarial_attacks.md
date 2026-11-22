@@ -99,5 +99,5 @@ Two things to know when reading the text results:
 | Hourly activity | 4 (all cheap) | all 4 together | 4 |
 | Post text | 3 (all cheap) | all 3 together | 3 |
 
-The graph and multimodal models are not attacked yet: graph attacks need new accounts wired into
-the network.
+The graph and multimodal models were not attacked (graph attacks would need new accounts wired
+into the network) and are not shown on the website.
