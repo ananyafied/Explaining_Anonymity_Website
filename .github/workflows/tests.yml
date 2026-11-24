@@ -1,0 +1,25 @@
+# Run the test suite on every push and pull request.
+# The tests cover the data generators, the explanation metrics and the website's labelling rules;
+# they need no models or deep-learning libraries, so only the light pinned packages are installed.
+name: Tests
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  pytest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+      - name: Install test dependencies (versions pinned as in requirements-site.txt)
+        run: pip install numpy==2.2.6 pandas==2.3.3 scipy==1.15.2 scikit-learn==1.7.2 pytest==8.2.0
+      - name: Run tests
+        run: python -m pytest -q
